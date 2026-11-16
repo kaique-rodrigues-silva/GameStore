@@ -1,6 +1,4 @@
-# GameStore — Projeto Integrador (versão simples, do zero)
-
-Esta é uma implementação **independente da GameStore 2.1**, reduzida para apresentação acadêmica. Não copie arquivos da versão antiga sobre ela.
+# GameStore — Projeto Integrador 
 
 ## O que está incluso
 
