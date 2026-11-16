@@ -28,7 +28,7 @@ class Produto {
     @Column(nullable=false) public String nome;
     public String categoria; public String plataforma; public String condicao;
     @Column(length=2000) public String descricao;
-    @Column(length=2000) public String imagem;
+    @Lob @Column(columnDefinition="CLOB") public String imagem;
     @Column(nullable=false, precision=12, scale=2) public BigDecimal preco;
     @Column(nullable=false) public int estoque;
     @Column(nullable=false) public boolean ativo = true;
