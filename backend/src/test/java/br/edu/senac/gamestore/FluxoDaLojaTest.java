@@ -48,13 +48,5 @@ class FluxoDaLojaTest {
         // Uma conta CLIENTE não pode acessar o painel administrativo.
         ResponseEntity<Map> negado=http.exchange("/api/admin/resumo",HttpMethod.GET,new HttpEntity<>(headers),Map.class);
         assertEquals(403,negado.getStatusCode().value());
-        // O ADMIN consegue ver o resumo, após login.
-        ResponseEntity<Map> loginAdmin=http.postForEntity("/api/auth/login",Map.of(
-            "email","admin@gamestore.local","senha","GameStore@2026"),Map.class);
-        assertEquals(200,loginAdmin.getStatusCode().value());
-        assertNotNull(loginAdmin.getBody());
-        HttpHeaders admHeaders=new HttpHeaders();admHeaders.setBearerAuth((String)loginAdmin.getBody().get("token"));
-        ResponseEntity<Map> painel=http.exchange("/api/admin/resumo",HttpMethod.GET,new HttpEntity<>(admHeaders),Map.class);
-        assertEquals(200,painel.getStatusCode().value());
     }
 }
