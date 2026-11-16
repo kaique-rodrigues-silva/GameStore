@@ -1,84 +1,70 @@
-# GameStore — Projeto Integrador 
+# GameStore
 
-## O que está incluso
+**Sistema de e-commerce de jogos, consoles e acessórios**, desenvolvido como Projeto Integrador II do curso de Análise e Desenvolvimento de Sistemas do SENAC.
 
-- **Angular 19**: loja, catálogo, carrinho, formulário de cadastro e login, histórico de pedidos, painel administrativo.
-- **Spring Boot 3.4.3 + Java 21 (compatível com o Java 25 instalado no PC)**: API REST com controllers, regras de negócio e repositórios JPA.
-- **H2 em arquivo**: `backend/dados/gamestore.mv.db` (criado na primeira execução).
-- **Autenticação**: tokens aleatórios salvos no H2 por 24 horas; senhas protegidas com BCrypt. Não há filtro personalizado nem JWT.
-- **Perfis**: CLIENTE e ADMIN.
-- **CRUD**: produtos podem ser criados, consultados, alterados e excluídos se não tiverem pedidos; com histórico, são arquivados. Contas são cadastradas, listadas, editadas e desativadas.
-- **Documentos**: CPF e CNPJ com verificação matemática (inclusive CNPJ alfanumérico); IE por UF pela biblioteca Stella; RG de SP com DV e outros RGs por formato somente (limitação descrita).
-- **Checkout demonstrativo**: Pix, cartão de crédito/débito ou dinheiro, sem transação financeira real. Reduz estoque e preserva histórico.
+A GameStore reúne uma loja virtual para clientes e um painel administrativo para gerenciamento do catálogo, dos usuários e dos pedidos. O projeto demonstra o funcionamento de uma aplicação web com interface Angular, API REST em Spring Boot e persistência de dados.
 
-### 1. Abra a pasta no VS Code
+## Funcionalidades
 
-Extraia o ZIP em **pasta nova** e abra `GameStore_Limpa` no VS Code. Não misture com GameStore_2_1.
+- Catálogo de produtos com jogos, consoles e acessórios
+- Cadastro e login de clientes
+- Carrinho de compras e finalização de pedidos demonstrativos
+- Consulta do histórico de pedidos
+- Painel administrativo para gerenciar produtos, usuários e pedidos
+- CRUD de produtos: cadastrar, consultar, atualizar e excluir ou arquivar
+- Controle de estoque e validação de documentos
 
-### 2. Abra dois terminais CMD
+> **Projeto acadêmico:** os pagamentos são simulados. Não há cobrança real.
 
-**Terminal A:**
+## Tecnologias
 
-```cmd
-cd backend
-mvn clean test
-mvn spring-boot:run
-```
+| Camada | Tecnologia |
+| --- | --- |
+| Front-end | Angular 19, TypeScript, HTML e CSS |
+| Back-end | Java 21, Spring Boot 3.4.3 e API REST |
+| Banco de dados | H2 com persistência local |
+| Organização | Padrão MVC com camadas de serviço e repositório |
 
-**Terminal B:**
+## Como executar localmente
 
-```cmd
-cd frontend
-npm install
-npm start
-```
+**Pré-requisitos:** Java 21 ou compatível, Maven e Node.js com npm instalados.
 
-No navegador: http://localhost:4200
+1. Clone o repositório ou baixe o código pelo botão **Code > Download ZIP**:
 
-### 3. Entre como administrador
+   ```bash
+   git clone https://github.com/kaique-rodrigues-silva/GameStore.git
+   cd GameStore
+   ```
 
-- E-mail: `admin@gamestore.local`
-- Senha: `GameStore@2026`
+2. Em um terminal, inicie o back-end:
 
-Para **testar compras imediatamente, sem precisar preencher CPF**, use a conta de cliente de demonstração:
+   ```bash
+   cd backend
+   mvn spring-boot:run
+   ```
 
-- E-mail: `cliente@gamestore.local`
-- Senha: `Cliente@2026`
+3. Em outro terminal, a partir da pasta principal do projeto, inicie o front-end:
 
-As duas contas são geradas no primeiro início de um banco vazio. Os documentos de demonstração são apenas exemplos acadêmicos e não comprovam identidade.
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
-Esses dados são exclusivamente de demonstração **local**. Não publique a aplicação com essas senhas.
+4. Abra **http://localhost:4200** no navegador.
 
-### 4. Demonstração curta
+5. Navegue pelo catálogo. Para realizar pedidos, utilize o cadastro e login de cliente. O acesso administrativo é destinado aos responsáveis pelo projeto; **credenciais administrativas não são divulgadas neste repositório**.
 
-1. Veja a vitrine e adicione um produto ao carrinho.
-2. Crie uma conta de cliente com um CPF **de teste com dígito matematicamente válido** (não é prova de identidade); o sistema entra automaticamente depois do cadastro.
-3. Abra o carrinho e preencha um endereço de entrega fictício. Escolha Pix e confirme o pedido demonstrativo.
-4. Abra **Meus pedidos**.
-5. Saia, entre como admin, abra o painel, confira o pedido e o estoque.
-6. Demonstre cadastrar e editar um produto. Demonstre CPF/CNPJ inválidos sendo rejeitados.
+O endereço `localhost` funciona apenas no computador em que o projeto estiver executando. A hospedagem pública é uma etapa separada.
 
-**Atenção**: esta nova versão é independente e começa com banco novo. Seu banco antigo permanece intacto se você não apagar a pasta da versão 2.1. Não há migração automática.
+## Organização do código
 
-## Requisitos e limites
+- `frontend/` — interface da loja e painel administrativo, desenvolvidos com Angular.
+- `backend/` — controllers, modelos, regras de negócio, repositórios e configurações do Spring Boot.
+- `backend/src/main/java/br/edu/senac/gamestore/Modelo.java` — entidades do sistema.
+- `backend/src/main/java/br/edu/senac/gamestore/LojaController.java` e `AdminController.java` — endpoints e operações da API.
+- `backend/src/main/java/br/edu/senac/gamestore/Repositorios.java` — acesso ao banco de dados.
 
-O professor escreveu que os usuários devem ser cadastrados previamente pelo administrador. Aqui há a **tela administrativa de cadastro**, porém também há autocadastro do cliente (escolha feita para o e-commerce). Antes de apresentar como conformidade total, confirme essa interpretação com o professor ou use o cadastro administrativo na demonstração.
+## Observações
 
-O RG antigo não possui validação nacional única: apenas SP tem dígito conferido matematicamente nesta versão; nas demais UFs o formato é verificado. A IE usa validação por UF.
-
-O pagamento é apenas demonstrativo. A aplicação destina-se a uso acadêmico local e não está preparada para transações financeiras reais em produção.
-
-## O que testar no seu computador
-
-O projeto foi conferido por análise de sintaxe, mas **não foi compilado nem executado integralmente neste ambiente** porque Maven e dependências Angular não estão instalados aqui. O teste automatizado `FluxoDaLojaTest` foi escrito para validar o fluxo via HTTP quando você rodar `mvn clean test`.
-
-Se aparecer falha, envie **o primeiro erro** do terminal. Não execute `npm audit fix --force` sem revisar.
-
-## Onde está o MVC e como apresentar
-
-- **Model:** `backend/src/main/java/` — procure `Modelo.java`, que define as entidades.
-- **View:** `frontend/src/app/` — componentes Angular das páginas da loja e administração.
-- **Controller:** `backend/src/main/java/` — `LojaController.java` e `AdminController.java` recebem as requisições HTTP.
-- **Service e Repository:** implementam as regras de negócio e a persistência no H2.
-
-**Demonstração sugerida:** abra a vitrine, coloque um produto no carrinho, conclua um pedido fictício, consulte o histórico e depois entre como administrador para mostrar o CRUD e o estoque. Pagamentos são apenas demonstrativos.
+O banco H2 salva os dados em arquivos locais que não devem ser publicados no GitHub. A validação matemática do RG nesta implementação se aplica a São Paulo; para outros estados, há verificação de formato. O projeto é destinado à demonstração acadêmica, não a operações comerciais reais.
