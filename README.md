@@ -57,6 +57,23 @@ A GameStore reúne uma loja virtual para clientes e um painel administrativo par
 
 O endereço `localhost` funciona apenas no computador em que o projeto estiver executando. A hospedagem pública é uma etapa separada.
 
+## Publicar no Railway
+
+O `Dockerfile` na raiz compila o Angular e o Spring Boot juntos: basta **um serviço**, com um único link HTTPS.
+
+1. No Railway, escolha **GitHub Repository > GameStore > Add Variables**.
+2. Defina as variáveis no serviço, sem colocá-las no GitHub:
+   - `GAMESTORE_ADMIN_EMAIL`: e-mail escolhido para o administrador.
+   - `GAMESTORE_ADMIN_PASSWORD`: senha nova e exclusiva (mínimo 12 caracteres).
+   - `GAMESTORE_DATA_DIR`: `/data`.
+3. No canvas do projeto, adicione um **Volume** vinculado ao serviço, com **Mount Path** `/data`.
+4. Clique em **Deploy** e acompanhe os logs.
+5. Em **Settings > Networking**, use **Generate Domain** para obter o endereço público.
+
+O banco H2 é salvo no volume persistente. **Não reutilize as antigas credenciais demonstrativas**: elas já apareceram no histórico público do repositório. A conta de administrador só é criada se as variáveis privadas estiverem configuradas. No uso local com banco novo, configure as mesmas variáveis no terminal antes de iniciar o back-end.
+
+Esta aplicação é somente uma demonstração acadêmica: não aceita pagamentos reais e não deve coletar documentos de pessoas reais em hospedagem pública.
+
 ## Organização do código
 
 - `frontend/` — interface da loja e painel administrativo, desenvolvidos com Angular.
