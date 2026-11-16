@@ -97,11 +97,14 @@ export class AdminComponent implements OnInit {
   limparProduto(){this.produtoId=null;this.produtoForm=this.novoProduto();}
   editarProduto(p:Produto){this.produtoId=p.id;this.produtoForm={nome:p.nome,categoria:p.categoria,plataforma:p.plataforma,condicao:p.condicao,
     preco:p.preco,estoque:p.estoque,imagem:p.imagem||'',descricao:p.descricao||''};}
-  async salvarProduto(){try{
+  async salvarProduto(){
+    this.aviso='';this.erro='';
+    try {
       if(this.produtoId)await this.api.put(`/admin/produtos/${this.produtoId}`,this.produtoForm);
       else await this.api.post('/admin/produtos',this.produtoForm);
-      this.aviso='Produto salvo.';this.erro='';this.limparProduto();await this.carregar();
-    }catch(e){this.erro=(e as Error).message;}}
+      this.aviso='Produto salvo.';this.limparProduto();await this.carregar();
+    }catch(e){this.aviso='';this.erro=(e as Error).message;}
+  }
   async excluirProduto(p:Produto){
     if(!confirm(`Excluir ou arquivar ${p.nome}?`))return;
     try{await this.api.del(`/admin/produtos/${p.id}`);this.aviso='Produto atualizado.';await this.carregar();}
