@@ -1,0 +1,20 @@
+# Angular
+**/node_modules/
+**/dist/
+.angular/
+**/.angular/
+
+# Java e Maven
+**/target/
+*.class
+
+# Banco de dados local
+backend/dados/*
+!backend/dados/.gitkeep
+
+# Configurações pessoais
+.vscode/
+.idea/
+*.log
+.env
+.env.*

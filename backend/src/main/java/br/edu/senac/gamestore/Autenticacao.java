@@ -1,0 +1,103 @@
+package br.edu.senac.gamestore;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.UUID;
+import java.util.Locale;
+
+/* SERVICE: sessões persistidas no H2, sem filtro especial ou token JWT. */
+@Service
+class Autenticacao {
+    private final ContaRepo contas;
+    private final SessaoRepo sessoes;
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    Autenticacao(ContaRepo contas,SessaoRepo sessoes) { this.contas=contas;this.sessoes=sessoes; }
+
+    public String hash(String senha) {
+        if(senha==null || senha.length()<8)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Senha deve ter pelo menos oito caracteres");
+        return encoder.encode(senha);
+    }
+    public Conta atual(String authorization) {
+        if(authorization==null || !authorization.startsWith("Bearer "))
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Entre na conta para continuar");
+        String token=authorization.substring(7).trim();
+        Sessao sessao=sessoes.findById(token).orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Sessão inválida"));
+        if(sessao.expiraEm.isBefore(Instant.now())) {
+            sessoes.deleteById(token);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Sessão expirada");
+        }
+        Conta c=contas.findById(sessao.contaId).orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Conta não encontrada"));
+        if(!c.ativo)throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Conta desativada");
+        return c;
+    }
+    public Conta admin(String authorization) {
+        Conta c=atual(authorization);
+        if(!"ADMIN".equals(c.perfil))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Apenas administradores");
+        return c;
+    }
+    public Conta cliente(String authorization) {
+        Conta c=atual(authorization);
+        if(!"CLIENTE".equals(c.perfil))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Entre como cliente para comprar");
+        return c;
+    }
+    public Map<String,Object> perfil(Conta c) {
+        return Map.of("id",c.id,"nome",c.nome,"email",c.email,"perfil",c.perfil,"tipo",c.tipo);
+    }
+    @Transactional
+    public Map<String,Object> login(String email,String senha) {
+        Conta c=contas.findByEmailIgnoreCase(email==null?"":email.trim())
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED,"E-mail ou senha incorretos"));
+        if(!c.ativo || senha==null || !encoder.matches(senha,c.senhaHash))
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"E-mail ou senha incorretos");
+        Sessao s=new Sessao();s.token=UUID.randomUUID().toString()+"-"+UUID.randomUUID();s.contaId=c.id;
+        s.expiraEm=Instant.now().plus(24,ChronoUnit.HOURS);sessoes.save(s);
+        return Map.of("token",s.token,"conta",perfil(c));
+    }
+    @Transactional
+    public Conta registrar(String nome,String email,String senha,String cpf) {
+        if(nome==null || nome.isBlank() || email==null || !email.matches("(?i)^[^@ ]+@[^@ ]+\\.[^@ ]+$"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Nome ou e-mail inválidos");
+        if(!Documentos.cpf(cpf))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"CPF inválido");
+        String e=email.trim().toLowerCase(Locale.ROOT), c=Documentos.numeros(cpf);
+        if(contas.findByEmailIgnoreCase(e).isPresent() || contas.existsByCpf(c))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"E-mail ou CPF já cadastrado");
+        Conta conta=new Conta();conta.nome=nome.trim();conta.email=e;conta.senhaHash=hash(senha);conta.cpf=c;
+        conta.tipo="PF";conta.perfil="CLIENTE";
+        return contas.save(conta);
+    }
+    @Transactional
+    public void sair(String header) {
+        if(header!=null && header.startsWith("Bearer ")) sessoes.deleteById(header.substring(7).trim());
+    }
+}
+
+/* CONTROLLER: autenticação e criação de conta pública. */
+@RestController
+@RequestMapping("/api/auth")
+class AuthController {
+    private final Autenticacao auth;
+    AuthController(Autenticacao auth){this.auth=auth;}
+    record Credenciais(String email,String senha) { }
+    record Cadastro(String nome,String email,String senha,String cpf) { }
+    @PostMapping("/registro")
+    public Map<String,Object> registro(@RequestBody Cadastro dados) {
+        Conta c=auth.registrar(dados.nome(),dados.email(),dados.senha(),dados.cpf());
+        return Map.of("id",c.id,"mensagem","Conta criada. Faça login.");
+    }
+    @PostMapping("/login")
+    public Map<String,Object> login(@RequestBody Credenciais cred) { return auth.login(cred.email(),cred.senha()); }
+    @GetMapping("/me")
+    public Map<String,Object> me(@RequestHeader(value="Authorization",required=false) String token) { return auth.perfil(auth.atual(token)); }
+    @PostMapping("/sair")
+    public ResponseEntity<Void> logout(@RequestHeader(value="Authorization",required=false) String token) {
+        auth.sair(token);return ResponseEntity.noContent().build();
+    }
+}
