@@ -1,6 +1,7 @@
 package br.edu.senac.gamestore;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -9,15 +10,20 @@ import java.math.BigDecimal;
 /* Dados iniciais de DEMONSTRAÇÃO. Executa somente no banco vazio. */
 @Configuration
 class CatalogoInicial {
+    @Value("${GAMESTORE_ADMIN_EMAIL:}") private String emailAdmin;
+    @Value("${GAMESTORE_ADMIN_PASSWORD:}") private String senhaAdmin;
     @Bean CommandLineRunner inicializar(ContaRepo contas,ProdutoRepo produtos){
         return args->{
-            if(contas.count()==0){
-                Conta admin=new Conta();admin.nome="Administrador GameStore";admin.email="admin@gamestore.local";
-                admin.senhaHash=new BCryptPasswordEncoder().encode("GameStore@2026");admin.perfil="ADMIN";
-                admin.tipo="PF";contas.save(admin);
-                Conta cliente=new Conta();cliente.nome="Cliente Demonstração";cliente.email="cliente@gamestore.local";
-                cliente.senhaHash=new BCryptPasswordEncoder().encode("Cliente@2026");
-                cliente.perfil="CLIENTE";cliente.tipo="PF";cliente.cpf="00000000191";contas.save(cliente);
+            // Administrador: credenciais fornecidas de maneira privada no ambiente.
+            if(!emailAdmin.isBlank() && !senhaAdmin.isBlank()) {
+                if(senhaAdmin.length()<12) throw new IllegalStateException("Defina GAMESTORE_ADMIN_PASSWORD com pelo menos 12 caracteres");
+                String email=emailAdmin.trim().toLowerCase(java.util.Locale.ROOT);
+                if(contas.findByEmailIgnoreCase(email).isEmpty()){
+                    Conta admin=new Conta();
+                    admin.nome="Administrador GameStore";admin.email=email;
+                    admin.senhaHash=new BCryptPasswordEncoder().encode(senhaAdmin);admin.perfil="ADMIN";
+                    admin.tipo="PF";contas.save(admin);
+                }
             }
             if(produtos.count()==0){
                 inserir(produtos,"Elden Ring","JOGO","PS5","NOVO","249.90",8,"/assets/produtos/elden-ring.png");
