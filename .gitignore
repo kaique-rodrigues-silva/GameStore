@@ -18,3 +18,9 @@ backend/dados/*
 *.log
 .env
 .env.*
+
+# Materiais locais de apoio (não publicar)
+INICIAR_BACKEND.bat
+INICIAR_FRONTEND.bat
+INTEGRANTES-PREENCHER.md
+docs/

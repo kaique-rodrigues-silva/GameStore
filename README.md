@@ -35,8 +35,6 @@ npm start
 
 No navegador: http://localhost:4200
 
-Os arquivos `.bat` na raiz também podem iniciar cada servidor.
-
 ### 3. Entre como administrador
 
 - E-mail: `admin@gamestore.local`
@@ -76,4 +74,11 @@ O projeto foi conferido por análise de sintaxe, mas **não foi compilado nem ex
 
 Se aparecer falha, envie **o primeiro erro** do terminal. Não execute `npm audit fix --force` sem revisar.
 
-Veja `docs/GUIA-PARA-APRESENTAR.md`.
+## Onde está o MVC e como apresentar
+
+- **Model:** `backend/src/main/java/` — procure `Modelo.java`, que define as entidades.
+- **View:** `frontend/src/app/` — componentes Angular das páginas da loja e administração.
+- **Controller:** `backend/src/main/java/` — `LojaController.java` e `AdminController.java` recebem as requisições HTTP.
+- **Service e Repository:** implementam as regras de negócio e a persistência no H2.
+
+**Demonstração sugerida:** abra a vitrine, coloque um produto no carrinho, conclua um pedido fictício, consulte o histórico e depois entre como administrador para mostrar o CRUD e o estoque. Pagamentos são apenas demonstrativos.
