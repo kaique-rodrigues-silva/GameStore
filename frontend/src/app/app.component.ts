@@ -12,7 +12,7 @@ import { AdminComponent } from './admin.component';
   <div class="header-actions"><button (click)="ir('loja')">Loja</button>
     <button *ngIf="api.usuario()?.perfil==='CLIENTE'" (click)="ir('pedidos')">Meus pedidos</button>
     <button *ngIf="api.usuario()?.perfil==='ADMIN'" (click)="ir('admin')">Administração</button>
-    <button (click)="ir('carrinho')">Carrinho ({{quantidade}})</button>
+
     <button *ngIf="!api.usuario()" (click)="ir('login')">Entrar</button>
     <span class="user-info" *ngIf="api.usuario()">Olá, {{api.usuario()?.nome}}</span>
     <button *ngIf="api.usuario()?.perfil==='CLIENTE'" (click)="ir('excluir')">Excluir minha conta</button>
@@ -64,12 +64,51 @@ import { AdminComponent } from './admin.component';
   </section>
   <app-admin *ngIf="pagina==='admin' && api.usuario()?.perfil==='ADMIN'"/>
 </main>
+<div class="cart-widget" *ngIf="pagina!=='carrinho'">
+  <div class="cart-backdrop" *ngIf="resumoCarrinhoAberto" (click)="resumoCarrinhoAberto=false"></div>
+  <aside class="cart-popover" *ngIf="resumoCarrinhoAberto" aria-label="Resumo do carrinho" role="dialog" aria-modal="false">
+    <div class="cart-popover-head">
+      <div><strong>Meu carrinho</strong><span>{{quantidade}} {{quantidade===1?'item':'itens'}}</span></div>
+      <button type="button" class="cart-icon-button" (click)="resumoCarrinhoAberto=false" aria-label="Fechar carrinho">×</button>
+    </div>
+    <div class="cart-popover-body">
+      <div *ngIf="!carrinho.length" class="cart-empty">Seu carrinho está vazio. Que tal escolher um jogo?</div>
+      <div class="cart-mini-item" *ngFor="let item of carrinho">
+        <div class="cart-mini-thumb">
+          <img [src]="item.produto.imagem || imagemPadrao(item.produto)" [alt]="item.produto.nome" (error)="imagemQuebrou($event,item.produto)"/>
+        </div>
+        <div class="cart-mini-info">
+          <strong>{{item.produto.nome}}</strong>
+          <span>{{item.produto.preco | currency:'BRL'}}</span>
+          <div class="cart-mini-actions">
+            <button type="button" (click)="atualizarQuantidade({id:item.produto.id,delta:-1})" [disabled]="item.quantidade<=1" [attr.aria-label]="'Diminuir '+item.produto.nome">−</button>
+            <span>{{item.quantidade}}</span>
+            <button type="button" (click)="atualizarQuantidade({id:item.produto.id,delta:1})" [disabled]="item.quantidade>=item.produto.estoque" [attr.aria-label]="'Aumentar '+item.produto.nome">+</button>
+            <button type="button" class="cart-mini-remove" (click)="remover(item.produto.id)">Remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cart-popover-foot" *ngIf="carrinho.length">
+      <div class="cart-mini-total"><span>Subtotal</span><strong>{{subtotal | currency:'BRL'}}</strong></div>
+      <button type="button" class="button full" (click)="abrirPagamento()">Continuar para o pagamento</button>
+      <small>Compra demonstrativa, sem cobrança real.</small>
+    </div>
+  </aside>
+  <button type="button" class="cart-fab" (click)="resumoCarrinhoAberto=!resumoCarrinhoAberto" [attr.aria-expanded]="resumoCarrinhoAberto" aria-label="Abrir resumo do carrinho" title="Meu carrinho">
+    <svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>
+    </svg>
+    <span class="cart-fab-count" *ngIf="quantidade">{{quantidade}}</span>
+  </button>
+</div>
 <footer class="footer"><div class="container foot-row"><div><strong>GAMESTORE</strong><p>Seu lugar para jogos, consoles e acessórios.</p></div>
   <div><strong>Sua próxima aventura começa aqui.</strong><p>Projeto acadêmico · Compras e pagamentos demonstrativos, sem cobrança real.</p></div>
 </div></footer>
 `})
 export class AppComponent implements OnInit {
   pagina='loja';produtos:Produto[]=[];carrinho:Linha[]=[];pedidos:Pedido[]=[];
+  resumoCarrinhoAberto=false;
   carregando=true;erroProdutos='';erroAuth='';erroPedidos='';enviando=false;
   loginEmail='';loginSenha='';novoNome='';novoEmail='';novoCpf='';novaSenha='';
   senhaExclusao='';confirmacaoExclusao='';erroExclusao='';excluindo=false;
@@ -78,7 +117,16 @@ export class AppComponent implements OnInit {
   async carregarProdutos(){this.carregando=true;try{this.produtos=await this.api.get<Produto[]>('/loja/produtos');this.erroProdutos='';}
     catch(e){this.erroProdutos=(e as Error).message;}finally{this.carregando=false;}}
   get quantidade(){return this.carrinho.reduce((s,i)=>s+i.quantidade,0);}
+  get subtotal(){return this.carrinho.reduce((total,item)=>total+item.produto.preco*item.quantidade,0);}
+  imagemPadrao(p:Produto){return '/assets/placeholder-'+(p.categoria==='CONSOLE'?'console':p.categoria==='ACESSORIO'?'acessorio':'jogo')+'.svg';}
+  imagemQuebrou(event:Event,p:Produto){
+    const img=event.target as HTMLImageElement;
+    const fallback=this.imagemPadrao(p);
+    if(!img.src.endsWith(fallback))img.src=fallback;
+  }
+  abrirPagamento(){this.resumoCarrinhoAberto=false;void this.ir('carrinho');}
   async ir(pagina:string){
+    this.resumoCarrinhoAberto=false;
     this.pagina=pagina;this.erroAuth='';window.scrollTo(0,0);
     if(pagina==='loja')await this.carregarProdutos();
     if(pagina==='pedidos'){
@@ -87,7 +135,7 @@ export class AppComponent implements OnInit {
       catch(e){this.erroPedidos=(e as Error).message;}
     }
   }
-  adicionar(p:Produto){const l=this.carrinho.find(x=>x.produto.id===p.id);
+  adicionar(p:Produto){this.resumoCarrinhoAberto=true;const l=this.carrinho.find(x=>x.produto.id===p.id);
     if(l){if(l.quantidade<p.estoque)l.quantidade++;else alert('Quantidade indisponível no estoque.');}
     else this.carrinho.push({produto:p,quantidade:1});
   }
