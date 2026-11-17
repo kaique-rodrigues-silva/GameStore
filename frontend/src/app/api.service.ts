@@ -29,6 +29,7 @@ export class ApiService {
   post<T>(url:string,body:unknown){return this.req<T>('POST',url,body);}
   put<T>(url:string,body:unknown){return this.req<T>('PUT',url,body);}
   del<T>(url:string){return this.req<T>('DELETE',url);}
+  delComCorpo<T>(url:string,body:unknown){return this.req<T>('DELETE',url,body);}
   async restaurar() {
     if(!this.token)return;
     try {this.usuario.set(await this.get<Usuario>('/auth/me'));} catch {this.usuario.set(null);}
