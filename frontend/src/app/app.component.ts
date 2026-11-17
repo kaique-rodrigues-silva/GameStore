@@ -135,7 +135,7 @@ export class AppComponent implements OnInit {
       catch(e){this.erroPedidos=(e as Error).message;}
     }
   }
-  adicionar(p:Produto){this.resumoCarrinhoAberto=true;const l=this.carrinho.find(x=>x.produto.id===p.id);
+  adicionar(p:Produto){const l=this.carrinho.find(x=>x.produto.id===p.id);
     if(l){if(l.quantidade<p.estoque)l.quantidade++;else alert('Quantidade indisponível no estoque.');}
     else this.carrinho.push({produto:p,quantidade:1});
   }
