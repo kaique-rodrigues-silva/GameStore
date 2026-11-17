@@ -66,15 +66,38 @@ class Autenticacao {
         return Map.of("token",s.token,"conta",perfil(c));
     }
     @Transactional
-    public Conta registrar(String nome,String email,String senha,String cpf) {
+    public Conta registrar(String nome,String email,String senha,String tipo,String cpf,String cnpj,String ie,String ieUf) {
         if(nome==null || nome.isBlank() || email==null || !email.matches("(?i)^[^@ ]+@[^@ ]+\\.[^@ ]+$"))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Nome ou e-mail inválidos");
-        if(!Documentos.cpf(cpf))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"CPF inválido");
-        String e=email.trim().toLowerCase(Locale.ROOT), c=Documentos.numeros(cpf);
-        if(contas.findByEmailIgnoreCase(e).isPresent() || contas.existsByCpf(c))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"E-mail ou CPF já cadastrado");
-        Conta conta=new Conta();conta.nome=nome.trim();conta.email=e;conta.senhaHash=hash(senha);conta.cpf=c;
-        conta.tipo="PF";conta.perfil="CLIENTE";
+        String perfilTipo=tipo==null || tipo.isBlank()?"PF":tipo.trim().toUpperCase(Locale.ROOT);
+        if(!"PF".equals(perfilTipo) && !"PJ".equals(perfilTipo))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Tipo de cadastro inválido");
+        String e=email.trim().toLowerCase(Locale.ROOT);
+        if(contas.findByEmailIgnoreCase(e).isPresent())
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"E-mail já cadastrado");
+        Conta conta=new Conta();conta.nome=nome.trim();conta.email=e;conta.senhaHash=hash(senha);
+        conta.tipo=perfilTipo;conta.perfil="CLIENTE";
+        if("PJ".equals(perfilTipo)){
+            if(!Documentos.cnpj(cnpj))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"CNPJ inválido");
+            String documento=Documentos.alfanumerico(cnpj);
+            if(contas.existsByCnpj(documento))
+                throw new ResponseStatusException(HttpStatus.CONFLICT,"CNPJ já cadastrado");
+            conta.cnpj=documento;
+            if(ie!=null && !ie.isBlank()){
+                if(!Documentos.ie(ie,ieUf))
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Inscrição estadual inválida para a UF");
+                conta.ie=Documentos.alfanumerico(ie);
+                conta.ieUf=ieUf.toUpperCase(Locale.ROOT);
+            }
+        }else{
+            if(!Documentos.cpf(cpf))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"CPF inválido");
+            String documento=Documentos.numeros(cpf);
+            if(contas.existsByCpf(documento))
+                throw new ResponseStatusException(HttpStatus.CONFLICT,"CPF já cadastrado");
+            conta.cpf=documento;
+        }
         return contas.save(conta);
     }
     /* Exclusão irreversível da conta autenticada, incluindo pedidos e sessões. */
@@ -108,10 +131,11 @@ class AuthController {
     private final Autenticacao auth;
     AuthController(Autenticacao auth){this.auth=auth;}
     record Credenciais(String email,String senha) { }
-    record Cadastro(String nome,String email,String senha,String cpf) { }
+    record Cadastro(String nome,String email,String senha,String tipo,String cpf,String cnpj,String ie,String ieUf) { }
     @PostMapping("/registro")
     public Map<String,Object> registro(@RequestBody Cadastro dados) {
-        Conta c=auth.registrar(dados.nome(),dados.email(),dados.senha(),dados.cpf());
+        if(dados==null)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Informe os dados de cadastro");
+        Conta c=auth.registrar(dados.nome(),dados.email(),dados.senha(),dados.tipo(),dados.cpf(),dados.cnpj(),dados.ie(),dados.ieUf());
         return Map.of("id",c.id,"mensagem","Conta criada. Faça login.");
     }
     @PostMapping("/login")
