@@ -18,8 +18,12 @@ import java.util.Locale;
 class Autenticacao {
     private final ContaRepo contas;
     private final SessaoRepo sessoes;
+    private final PedidoRepo pedidos;
+    private final ItemPedidoRepo itens;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-    Autenticacao(ContaRepo contas,SessaoRepo sessoes) { this.contas=contas;this.sessoes=sessoes; }
+    Autenticacao(ContaRepo contas,SessaoRepo sessoes,PedidoRepo pedidos,ItemPedidoRepo itens) {
+        this.contas=contas;this.sessoes=sessoes;this.pedidos=pedidos;this.itens=itens;
+    }
 
     public String hash(String senha) {
         if(senha==null || senha.length()<8)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Senha deve ter pelo menos oito caracteres");
@@ -73,6 +77,24 @@ class Autenticacao {
         conta.tipo="PF";conta.perfil="CLIENTE";
         return contas.save(conta);
     }
+    /* Exclusão irreversível da conta autenticada, incluindo pedidos e sessões. */
+    @Transactional
+    public void excluirMinhaConta(String header,String senha,String confirmacao) {
+        Conta conta=cliente(header);
+        if(!"EXCLUIR MINHA CONTA".equals(confirmacao))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Confirmação incorreta");
+        if(senha==null || !encoder.matches(senha,conta.senhaHash))
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Senha incorreta");
+        for(Pedido pedido:pedidos.findByContaIdOrderByIdDesc(conta.id)) {
+            itens.deleteAll(itens.findByPedidoId(pedido.id));
+            pedidos.delete(pedido);
+        }
+        for(Sessao sessao:sessoes.findAll()) {
+            if(conta.id.equals(sessao.contaId))sessoes.delete(sessao);
+        }
+        contas.delete(conta);
+    }
+
     @Transactional
     public void sair(String header) {
         if(header!=null && header.startsWith("Bearer ")) sessoes.deleteById(header.substring(7).trim());
@@ -96,6 +118,15 @@ class AuthController {
     public Map<String,Object> login(@RequestBody Credenciais cred) { return auth.login(cred.email(),cred.senha()); }
     @GetMapping("/me")
     public Map<String,Object> me(@RequestHeader(value="Authorization",required=false) String token) { return auth.perfil(auth.atual(token)); }
+    record PedidoExclusao(String senha,String confirmacao) { }
+    @DeleteMapping("/minha-conta")
+    public ResponseEntity<Void> excluirConta(
+            @RequestHeader(value="Authorization",required=false) String token,
+            @RequestBody PedidoExclusao dados) {
+        if(dados==null)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Informe os dados de confirmação");
+        auth.excluirMinhaConta(token,dados.senha(),dados.confirmacao());
+        return ResponseEntity.noContent().build();
+    }
     @PostMapping("/sair")
     public ResponseEntity<Void> logout(@RequestHeader(value="Authorization",required=false) String token) {
         auth.sair(token);return ResponseEntity.noContent().build();
