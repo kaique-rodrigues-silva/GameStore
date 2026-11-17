@@ -80,13 +80,19 @@ import { ApiService, Produto, Pedido } from './api.service';
     <div class="admin-row" *ngFor="let p of pedidos"><div><strong>Pedido #{{p.id}}</strong>
       <div class="meta">Cliente ID: {{p.clienteId}} · {{p.pagamento}} · {{p.data}}</div>
       <div class="meta" *ngFor="let item of p.itens">{{item.quantidade}}× {{item.nome}}</div></div>
-      <strong>{{p.total | currency:'BRL'}}</strong>
+      <div class="admin-order-actions">
+        <strong>{{p.total | currency:'BRL'}}</strong>
+        <button type="button" class="link danger" *ngIf="p.id===2" (click)="excluirPedidoDois()" [disabled]="excluindoPedido">
+          {{excluindoPedido?'Excluindo...':'Excluir pedido #2'}}
+        </button>
+      </div>
     </div><div *ngIf="pedidos.length===0" class="empty">Nenhum pedido por enquanto.</div>
   </div>
 </section>
 `})
 export class AdminComponent implements OnInit {
   aba='resumo';erro='';aviso='';
+  excluindoPedido=false;
   resumo:{produtos?:number;clientes?:number;pedidos?:number;faturamento?:number}={};
   produtos:Produto[]=[];pedidos:(Pedido&{clienteId:number})[]=[];
   usuarios:{id:number;nome:string;email:string;perfil:string;tipo:string;ativo:boolean}[]=[];
@@ -131,6 +137,20 @@ export class AdminComponent implements OnInit {
       await this.api.post('/admin/usuarios',this.usuarioForm);this.aviso='Usuário cadastrado.';this.erro='';
       this.usuarioForm=this.novoUsuario();await this.carregar();
     }catch(e){this.erro=(e as Error).message;}}
+  async excluirPedidoDois(){
+    if(this.excluindoPedido)return;
+    const pedido=this.pedidos.find(p=>p.id===2);
+    if(!pedido)return;
+    const itens=pedido.itens.map(i=>i.quantidade+'× '+i.nome).join(', ');
+    if(!confirm('Excluir DEFINITIVAMENTE somente o pedido #2?\\n\\nItens: '+itens+'\\n\\nAs quantidades serão devolvidas ao estoque. Esta ação não pode ser desfeita.'))return;
+    this.excluindoPedido=true;this.erro='';this.aviso='';
+    try{
+      await this.api.del('/admin/pedidos/2');
+      await this.carregar();
+      this.aviso='Pedido #2 excluído e unidades devolvidas ao estoque.';
+    }catch(e){this.erro=(e as Error).message;}
+    finally{this.excluindoPedido=false;}
+  }
   async alternarConta(u:{id:number;nome:string;ativo:boolean}){
     try{await this.api.put(`/admin/usuarios/${u.id}`,{ativo:!u.ativo});this.aviso='Conta atualizada.';await this.carregar();}
     catch(e){this.erro=(e as Error).message;}
