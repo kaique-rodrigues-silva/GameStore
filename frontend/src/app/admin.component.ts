@@ -37,9 +37,8 @@ import { ApiService, Produto, Pedido } from './api.service';
         <label>Preço (R$) <input required name="preco" type="number" min="0" step="0.01" [(ngModel)]="produtoForm.preco"/></label>
         <label>Estoque <input required name="estoque" type="number" min="0" step="1" [(ngModel)]="produtoForm.estoque"/></label>
         <label>URL da imagem (opcional)
-          <textarea class="admin-image-url" name="imagem" [(ngModel)]="produtoForm.imagem" rows="3" placeholder="Cole aqui o link completo da imagem (links longos também são aceitos)"></textarea>
+          <textarea class="admin-image-url" name="imagem" [(ngModel)]="produtoForm.imagem" rows="3" placeholder="Cole a URL da imagem"></textarea>
         </label>
-        <p class="muted">Sem imagem? A vitrine usa automaticamente uma ilustração de jogo, console ou acessório, conforme a categoria.</p>
         <label>Descrição
           <textarea class="admin-description" name="descricao" [(ngModel)]="produtoForm.descricao" rows="4" maxlength="2000" placeholder="Descreva o produto"></textarea>
         </label>
