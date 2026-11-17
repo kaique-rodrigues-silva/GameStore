@@ -118,4 +118,31 @@ class AdminController {
     public List<Map<String,Object>> listarPedidos(@RequestHeader(value="Authorization",required=false) String token){
         admin(token);return compras.todos();
     }
+    /* Operação excepcional do ambiente de demonstração: somente pedido #2. */
+    @DeleteMapping("/pedidos/2")
+    @Transactional
+    public Map<String,String> excluirPedidoDois(@RequestHeader(value="Authorization",required=false) String token) {
+        admin(token);
+        Pedido pedido=pedidos.findById(2L).orElseThrow(
+            ()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Pedido #2 não encontrado")
+        );
+        List<ItemPedido> linhas=itens.findByPedidoId(pedido.id);
+        // Verifique todos os produtos antes de modificar qualquer registro.
+        Map<Produto,Integer> reposicao=new LinkedHashMap<>();
+        for(ItemPedido item:linhas){
+            Produto produto=produtos.findById(item.produtoId).orElseThrow(
+                ()->new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Produto do pedido não existe mais; nenhuma alteração realizada")
+            );
+            reposicao.merge(produto,item.quantidade,Integer::sum);
+        }
+        for(var entrada:reposicao.entrySet()){
+            Produto produto=entrada.getKey();
+            produto.estoque=Math.addExact(produto.estoque,entrada.getValue());
+            produtos.save(produto);
+        }
+        itens.deleteAll(linhas);
+        pedidos.delete(pedido);
+        return Map.of("mensagem","Pedido #2 excluído e produtos devolvidos ao estoque");
+    }
 }
