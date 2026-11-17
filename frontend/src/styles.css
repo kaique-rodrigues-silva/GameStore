@@ -31,3 +31,23 @@
 .cart-mini-total strong{font-size:20px;color:#31234c}
 .cart-popover-foot small{display:block;text-align:center;margin-top:10px;color:#8c87a1;font-size:11px}
 @media(max-width:720px){.cart-widget{bottom:16px;right:16px}.cart-fab{width:58px;height:58px;border-radius:18px}.cart-popover{bottom:73px;max-height:75vh;width:min(380px,calc(100vw - 32px))}}
+
+
+/* Campos de produto: largura contida e tamanho fixo, sem redimensionamento manual */
+.admin-area .admin-grid{min-width:0}
+.admin-area .admin-grid>.panel{min-width:0}
+.admin-area .admin-grid form{min-width:0}
+.admin-area .admin-description,
+.admin-area .admin-image-url{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  resize:none;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overflow-wrap:anywhere;
+}
+.admin-area .admin-description{height:120px}
+.admin-area .admin-image-url{height:94px}
