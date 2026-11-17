@@ -23,18 +23,12 @@ import { ApiService, Produto, Pedido } from './api.service';
         <label>Nome <input required name="nome" [(ngModel)]="produtoForm.nome"/></label>
         <label>Categoria <select name="categoria" [(ngModel)]="produtoForm.categoria" (ngModelChange)="trocarCategoria($event)"><option value="JOGO">Jogo</option><option value="CONSOLE">Console</option><option value="ACESSORIO">Acessório</option></select></label>
         <label *ngIf="produtoForm.categoria==='JOGO'">Plataforma
-          <select name="plataformaJogo" [(ngModel)]="produtoForm.plataforma">
-            <option value="">Selecione uma plataforma</option>
-            <option *ngFor="let plataforma of plataformasJogo" [value]="plataforma">{{plataforma}}</option>
-            <option value="OUTRA">Outra plataforma</option>
-          </select>
+          <input name="plataformaJogo" [(ngModel)]="produtoForm.plataforma" list="opcoes-plataformas" maxlength="120" placeholder="Ex.: PS5, Xbox, PC"/>
+          <datalist id="opcoes-plataformas"><option *ngFor="let plataforma of plataformasJogo" [value]="plataforma"></option></datalist>
         </label>
         <label *ngIf="produtoForm.categoria==='CONSOLE'">Marca / Empresa
-          <select name="marcaConsole" [(ngModel)]="produtoForm.plataforma">
-            <option value="">Selecione a empresa</option>
-            <option *ngFor="let marca of marcasConsole" [value]="marca">{{marca}}</option>
-            <option value="OUTRA">Outra marca</option>
-          </select>
+          <input name="marcaConsole" [(ngModel)]="produtoForm.plataforma" list="opcoes-marcas" maxlength="120" placeholder="Ex.: Nintendo, Sony, Microsoft"/>
+          <datalist id="opcoes-marcas"><option *ngFor="let marca of marcasConsole" [value]="marca"></option></datalist>
         </label>
         <label *ngIf="produtoForm.categoria==='ACESSORIO'">Marca
           <input name="marcaAcessorio" [(ngModel)]="produtoForm.plataforma" placeholder="Ex.: Sony, Logitech, HyperX" maxlength="120"/>
