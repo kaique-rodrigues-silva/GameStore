@@ -21,12 +21,29 @@ import { ApiService, Produto, Pedido } from './api.service';
     <div class="panel"><h3>{{produtoId?'Editar produto':'Cadastrar produto'}}</h3>
       <form (ngSubmit)="salvarProduto()">
         <label>Nome <input required name="nome" [(ngModel)]="produtoForm.nome"/></label>
-        <label>Categoria <select name="categoria" [(ngModel)]="produtoForm.categoria"><option value="JOGO">Jogo</option><option value="CONSOLE">Console</option><option value="ACESSORIO">Acessório</option></select></label>
-        <label>Plataforma <input name="plataforma" [(ngModel)]="produtoForm.plataforma"/></label>
+        <label>Categoria <select name="categoria" [(ngModel)]="produtoForm.categoria" (ngModelChange)="trocarCategoria($event)"><option value="JOGO">Jogo</option><option value="CONSOLE">Console</option><option value="ACESSORIO">Acessório</option></select></label>
+        <label *ngIf="produtoForm.categoria==='JOGO'">Plataforma
+          <select name="plataformaJogo" [(ngModel)]="produtoForm.plataforma">
+            <option value="">Selecione uma plataforma</option>
+            <option *ngFor="let plataforma of plataformasJogo" [value]="plataforma">{{plataforma}}</option>
+            <option value="OUTRA">Outra plataforma</option>
+          </select>
+        </label>
+        <label *ngIf="produtoForm.categoria==='CONSOLE'">Marca / Empresa
+          <select name="marcaConsole" [(ngModel)]="produtoForm.plataforma">
+            <option value="">Selecione a empresa</option>
+            <option *ngFor="let marca of marcasConsole" [value]="marca">{{marca}}</option>
+            <option value="OUTRA">Outra marca</option>
+          </select>
+        </label>
+        <label *ngIf="produtoForm.categoria==='ACESSORIO'">Marca
+          <input name="marcaAcessorio" [(ngModel)]="produtoForm.plataforma" placeholder="Ex.: Sony, Logitech, HyperX" maxlength="120"/>
+        </label>
         <label>Condição <select name="condicao" [(ngModel)]="produtoForm.condicao"><option value="NOVO">Novo</option><option value="USADO">Seminovo</option></select></label>
         <label>Preço (R$) <input required name="preco" type="number" min="0" step="0.01" [(ngModel)]="produtoForm.preco"/></label>
         <label>Estoque <input required name="estoque" type="number" min="0" step="1" [(ngModel)]="produtoForm.estoque"/></label>
-        <label>URL da imagem <input name="imagem" [(ngModel)]="produtoForm.imagem"/></label>
+        <label>URL da imagem (opcional) <input name="imagem" [(ngModel)]="produtoForm.imagem" placeholder="Deixe em branco para usar a ilustração padrão"/></label>
+        <p class="muted">Sem imagem? A vitrine usa automaticamente uma ilustração de jogo, console ou acessório, conforme a categoria.</p>
         <label>Descrição <textarea name="descricao" [(ngModel)]="produtoForm.descricao" rows="2"></textarea></label>
         <button class="button full" type="submit">{{produtoId?'Salvar alterações':'Cadastrar produto'}}</button>
         <button type="button" class="link" (click)="limparProduto()" *ngIf="produtoId">Cancelar edição</button>
@@ -79,11 +96,17 @@ export class AdminComponent implements OnInit {
   resumo:{produtos?:number;clientes?:number;pedidos?:number;faturamento?:number}={};
   produtos:Produto[]=[];pedidos:(Pedido&{clienteId:number})[]=[];
   usuarios:{id:number;nome:string;email:string;perfil:string;tipo:string;ativo:boolean}[]=[];
+  plataformasJogo=['PS5','PS4','PS3','Xbox Series X|S','Xbox One','Xbox 360','Nintendo Switch','Nintendo Switch 2','PC','Nintendo 3DS','Nintendo Wii','Multiplataforma'];
+  marcasConsole=['Sony / PlayStation','Microsoft / Xbox','Nintendo','Sega','Atari','Valve / Steam Deck','Outra'];
   produtoId:number|null=null;
   produtoForm=this.novoProduto();usuarioForm=this.novoUsuario();
   ufs=['SP','RJ','MG','ES','PR','SC','RS','BA','PE','CE','DF','GO','PA','AM','AC','AL','AP','MA','MT','MS','PB','PI','RN','RO','RR','SE','TO'];
   constructor(public api:ApiService) { }
   novoProduto(){return {nome:'',categoria:'JOGO',plataforma:'',condicao:'NOVO',preco:0,estoque:1,imagem:'',descricao:''};}
+  trocarCategoria(categoria:string){
+    this.produtoForm.plataforma='';
+    this.produtoForm.categoria=categoria;
+  }
   novoUsuario(){return {nome:'',email:'',senha:'',perfil:'CLIENTE',tipo:'PF',cpf:'',cnpj:'',rg:'',rgUf:'SP',ie:'',ieUf:'SP'};}
   ngOnInit(){void this.carregar();}
   async carregar(){
