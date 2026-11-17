@@ -17,6 +17,26 @@ import static org.junit.jupiter.api.Assertions.*;
 })
 class FluxoDaLojaTest {
     @Autowired TestRestTemplate http;
+    @Test void cadastrarEmpresaComCnpjEAutenticar(){
+        String email="empresa-"+UUID.randomUUID()+"@example.com";
+        ResponseEntity<Map> cadastro=http.postForEntity("/api/auth/registro",Map.of(
+            "nome","Empresa Teste Ltda","email",email,"senha","SenhaForte@123",
+            "tipo","PJ","cnpj","11.222.333/0001-81"),Map.class);
+        assertEquals(200,cadastro.getStatusCode().value(),"Cadastro PJ falhou: "+cadastro.getBody());
+        ResponseEntity<Map> login=http.postForEntity("/api/auth/login",Map.of(
+            "email",email,"senha","SenhaForte@123"),Map.class);
+        assertEquals(200,login.getStatusCode().value());
+        assertNotNull(login.getBody());
+        Map<?,?> conta=(Map<?,?>)login.getBody().get("conta");
+        assertEquals("PJ",conta.get("tipo"));
+        assertEquals("CLIENTE",conta.get("perfil"));
+    }
+    @Test void rejeitarCnpjInvalido(){
+        ResponseEntity<Map> cadastro=http.postForEntity("/api/auth/registro",Map.of(
+            "nome","Empresa Inválida","email","invalida-"+UUID.randomUUID()+"@example.com",
+            "senha","SenhaForte@123","tipo","PJ","cnpj","11.222.333/0001-00"),Map.class);
+        assertEquals(400,cadastro.getStatusCode().value());
+    }
     @Test void criarContaLoginFinalizarPedidoEVerHistorico(){
         String email="teste-"+UUID.randomUUID()+"@example.com";
         ResponseEntity<Map> cadastro=http.postForEntity("/api/auth/registro",Map.of(
