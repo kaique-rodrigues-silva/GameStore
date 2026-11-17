@@ -24,11 +24,10 @@ import { Produto } from './api.service';
   <div class="products">
     <article class="product" *ngFor="let p of filtrados">
       <div class="product-photo">
-        <img *ngIf="p.imagem && !falhas[p.id]" [src]="p.imagem" [alt]="p.nome" (error)="falhas[p.id]=true"/>
-        <div class="photo-fallback" *ngIf="!p.imagem||falhas[p.id]">{{p.nome}}</div>
+        <img [src]="(p.imagem && !falhas[p.id]) ? p.imagem : imagemPadrao(p)" [alt]="p.imagem && !falhas[p.id] ? p.nome : 'Ilustração padrão de '+nomeCategoria(p)" (error)="falhas[p.id]=true"/>
         <span *ngIf="p.condicao==='USADO'" class="pill">Seminovo</span>
       </div>
-      <div class="product-body"><div class="meta">{{p.plataforma}} · {{p.categoria==='JOGO'?'Jogo':p.categoria==='CONSOLE'?'Console':'Acessório'}}</div>
+      <div class="product-body"><div class="meta">{{p.plataforma ? p.plataforma+' · ' : ''}}{{nomeCategoria(p)}}</div>
         <h3>{{p.nome}}</h3><span class="stock">{{p.estoque>0?'Disponível':'Sem estoque'}}</span>
         <div class="price">{{p.preco | currency:'BRL'}}</div>
         <button class="button full" [disabled]="p.estoque<1" (click)="adicionar.emit(p)">{{p.estoque>0?'Adicionar ao carrinho':'Indisponível'}}</button>
@@ -43,6 +42,8 @@ export class VitrineComponent {
   @Input() erro='';
   @Output() adicionar=new EventEmitter<Produto>();
   pesquisa='';categoria='TODOS';falhas:Record<number,boolean>={};
+  nomeCategoria(p:Produto){return p.categoria==='CONSOLE'?'Console':p.categoria==='ACESSORIO'?'Acessório':'Jogo';}
+  imagemPadrao(p:Produto){return '/assets/placeholder-'+(p.categoria==='CONSOLE'?'console':p.categoria==='ACESSORIO'?'acessorio':'jogo')+'.svg';}
   filtros=[{v:'TODOS',label:'Todos'},{v:'JOGO',label:'Jogos'},{v:'CONSOLE',label:'Consoles'},{v:'ACESSORIO',label:'Acessórios'},{v:'USADO',label:'Seminovos'}];
   get filtrados():Produto[]{
     const busca=this.pesquisa.trim().toLowerCase();
