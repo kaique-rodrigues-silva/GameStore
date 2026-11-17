@@ -15,6 +15,7 @@ import { AdminComponent } from './admin.component';
     <button (click)="ir('carrinho')">Carrinho ({{quantidade}})</button>
     <button *ngIf="!api.usuario()" (click)="ir('login')">Entrar</button>
     <span class="user-info" *ngIf="api.usuario()">Olá, {{api.usuario()?.nome}}</span>
+    <button *ngIf="api.usuario()?.perfil==='CLIENTE'" (click)="ir('excluir')">Excluir minha conta</button>
     <button *ngIf="api.usuario()" (click)="sair()">Sair</button>
   </div>
 </div></header>
@@ -47,6 +48,20 @@ import { AdminComponent } from './admin.component';
       <div class="muted">Entrega: {{pedido.endereco}}</div>
     </div><div *ngIf="!pedidos.length && !erroPedidos" class="empty">Nenhum pedido realizado.</div>
   </section>
+  <section *ngIf="pagina==='excluir' && api.usuario()?.perfil==='CLIENTE'" class="section narrow">
+    <div class="panel auth-panel">
+      <h2>Excluir minha conta definitivamente</h2>
+      <p>Esta ação apaga sua conta, CPF, dados cadastrais, sessões, pedidos e endereços dos pedidos no banco ativo. Não é possível desfazer. Produtos e contas de outras pessoas não são afetados.</p>
+      <p class="muted">Registros em eventuais backups da hospedagem podem permanecer até o fim da retenção do provedor.</p>
+      <div class="alert error" *ngIf="erroExclusao">{{erroExclusao}}</div>
+      <form (ngSubmit)="excluirMinhaConta()">
+        <label>Confirme sua senha<input type="password" name="senhaExclusao" required [(ngModel)]="senhaExclusao"/></label>
+        <label>Digite EXCLUIR MINHA CONTA<input name="confirmacaoExclusao" required [(ngModel)]="confirmacaoExclusao"/></label>
+        <button type="submit" class="button full" [disabled]="excluindo || confirmacaoExclusao!=='EXCLUIR MINHA CONTA'">{{excluindo?'Excluindo...':'Excluir definitivamente'}}</button>
+      </form>
+      <button class="link" type="button" (click)="ir('loja')">Cancelar</button>
+    </div>
+  </section>
   <app-admin *ngIf="pagina==='admin' && api.usuario()?.perfil==='ADMIN'"/>
 </main>
 <footer class="footer"><div class="container foot-row"><div><strong>GAMESTORE</strong><p>Seu lugar para jogos, consoles e acessórios.</p></div>
@@ -57,6 +72,7 @@ export class AppComponent implements OnInit {
   pagina='loja';produtos:Produto[]=[];carrinho:Linha[]=[];pedidos:Pedido[]=[];
   carregando=true;erroProdutos='';erroAuth='';erroPedidos='';enviando=false;
   loginEmail='';loginSenha='';novoNome='';novoEmail='';novoCpf='';novaSenha='';
+  senhaExclusao='';confirmacaoExclusao='';erroExclusao='';excluindo=false;
   constructor(public api:ApiService) { }
   async ngOnInit(){await this.api.restaurar();await this.carregarProdutos();}
   async carregarProdutos(){this.carregando=true;try{this.produtos=await this.api.get<Produto[]>('/loja/produtos');this.erroProdutos='';}
@@ -88,5 +104,17 @@ export class AppComponent implements OnInit {
       const usuario=await this.api.entrar(this.loginEmail,this.loginSenha);
       await this.ir(usuario.perfil==='ADMIN'?'admin':this.carrinho.length?'carrinho':'loja');
     }catch(e){this.erroAuth=(e as Error).message;}finally{this.enviando=false;}}
+  async excluirMinhaConta(){
+    if(this.excluindo || this.confirmacaoExclusao!=='EXCLUIR MINHA CONTA')return;
+    this.erroExclusao='';this.excluindo=true;
+    try {
+      await this.api.delComCorpo<void>('/auth/minha-conta',{senha:this.senhaExclusao,confirmacao:this.confirmacaoExclusao});
+      await this.api.sair();
+      this.senhaExclusao='';this.confirmacaoExclusao='';this.loginSenha='';this.carrinho=[];this.pedidos=[];
+      await this.ir('loja');
+      alert('Sua conta e os dados associados foram excluídos do banco ativo.');
+    }catch(e){this.erroExclusao=(e as Error).message;}
+    finally{this.excluindo=false;}
+  }
   async sair(){await this.api.sair();await this.ir('loja');}
 }
