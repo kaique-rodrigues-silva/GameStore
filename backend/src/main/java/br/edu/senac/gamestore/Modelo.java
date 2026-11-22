@@ -57,3 +57,11 @@ class Sessao {
     @Column(nullable=false) public Long contaId;
     @Column(nullable=false) public Instant expiraEm;
 }
+
+/* Favoritos vinculados à conta: persistidos no H2. */
+@Entity @Table(name="favoritos", uniqueConstraints=@UniqueConstraint(columnNames={"conta_id","produto_id"}))
+class Favorito {
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;
+    @Column(name="conta_id",nullable=false) public Long contaId;
+    @Column(name="produto_id",nullable=false) public Long produtoId;
+}
