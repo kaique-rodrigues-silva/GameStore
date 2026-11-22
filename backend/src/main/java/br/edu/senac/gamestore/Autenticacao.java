@@ -20,9 +20,10 @@ class Autenticacao {
     private final SessaoRepo sessoes;
     private final PedidoRepo pedidos;
     private final ItemPedidoRepo itens;
+    private final FavoritoRepo favoritos;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-    Autenticacao(ContaRepo contas,SessaoRepo sessoes,PedidoRepo pedidos,ItemPedidoRepo itens) {
-        this.contas=contas;this.sessoes=sessoes;this.pedidos=pedidos;this.itens=itens;
+    Autenticacao(ContaRepo contas,SessaoRepo sessoes,PedidoRepo pedidos,ItemPedidoRepo itens,FavoritoRepo favoritos) {
+        this.contas=contas;this.sessoes=sessoes;this.pedidos=pedidos;this.itens=itens;this.favoritos=favoritos;
     }
 
     public String hash(String senha) {
@@ -115,6 +116,7 @@ class Autenticacao {
         for(Sessao sessao:sessoes.findAll()) {
             if(conta.id.equals(sessao.contaId))sessoes.delete(sessao);
         }
+        favoritos.deleteByContaId(conta.id);
         contas.delete(conta);
     }
 
