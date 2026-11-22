@@ -18,9 +18,10 @@ class AdminController {
     private final CompraService compras;
     private final PedidoRepo pedidos;
     private final ItemPedidoRepo itens;
+    private final FavoritoRepo favoritos;
     AdminController(Autenticacao auth,ContaRepo contas,ProdutoRepo produtos,CompraService compras,
-                    PedidoRepo pedidos,ItemPedidoRepo itens){
-        this.auth=auth;this.contas=contas;this.produtos=produtos;this.compras=compras;this.pedidos=pedidos;this.itens=itens;
+                    PedidoRepo pedidos,ItemPedidoRepo itens,FavoritoRepo favoritos){
+        this.auth=auth;this.contas=contas;this.produtos=produtos;this.compras=compras;this.pedidos=pedidos;this.itens=itens;this.favoritos=favoritos;
     }
     private void admin(String header){auth.admin(header);}
     @GetMapping("/resumo")
@@ -53,6 +54,7 @@ class AdminController {
     public Map<String,String> excluirProduto(@RequestHeader(value="Authorization",required=false) String token,@PathVariable Long id){
         admin(token);Produto p=produtos.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado"));
         if(itens.existsByProdutoId(id)) {p.ativo=false;produtos.save(p);return Map.of("mensagem","Produto arquivado, histórico preservado");}
+        favoritos.deleteByProdutoId(id);
         produtos.delete(p);return Map.of("mensagem","Produto excluído");
     }
     @GetMapping("/usuarios")
