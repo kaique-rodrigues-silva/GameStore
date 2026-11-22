@@ -11,6 +11,21 @@ import { ApiService, Produto, Pedido } from './api.service';
     <button [class.active]="aba==='pedidos'" (click)="aba='pedidos'">Pedidos</button>
   </nav>
   <div class="alert error" *ngIf="erro">{{erro}}</div><div class="alert" *ngIf="aviso">{{aviso}}</div>
+  <div *ngIf="aba==='resumo' || aba==='produtos'" class="low-stock-panel" [class.no-alerts]="produtosEstoqueBaixo.length===0">
+    <div class="low-stock-title">
+      <strong>Estoque baixo · Produtos novos</strong>
+      <span>{{produtosEstoqueBaixo.length}} {{produtosEstoqueBaixo.length===1?'produto':'produtos'}}</span>
+    </div>
+    <p class="muted" *ngIf="!produtosEstoqueBaixo.length">Nenhum produto novo com estoque baixo.</p>
+    <div *ngIf="produtosEstoqueBaixo.length" class="low-stock-list">
+      <div *ngFor="let p of produtosEstoqueBaixo" class="low-stock-item">
+        <span>{{p.nome}}</span>
+        <strong>{{p.estoque}} {{p.estoque===1?'unidade':'unidades'}}</strong>
+        <button type="button" class="link" (click)="irParaProduto(p)">Editar</button>
+      </div>
+    </div>
+    <p class="muted">Alerta para produtos novos com até 5 unidades. Seminovos não entram neste controle.</p>
+  </div>
   <div *ngIf="aba==='resumo'" class="stat-grid">
     <div class="stat"><span>Produtos ativos</span><strong>{{resumo.produtos || 0}}</strong></div>
     <div class="stat"><span>Clientes</span><strong>{{resumo.clientes || 0}}</strong></div>
@@ -101,6 +116,11 @@ export class AdminComponent implements OnInit {
   usuarios:{id:number;nome:string;email:string;perfil:string;tipo:string;ativo:boolean}[]=[];
   plataformasJogo=['PS5','PS4','PS3','Xbox Series X|S','Xbox One','Xbox 360','Nintendo Switch','Nintendo Switch 2','PC','Nintendo 3DS','Nintendo Wii','Multiplataforma'];
   marcasConsole=['Sony / PlayStation','Microsoft / Xbox','Nintendo','Sega','Atari','Valve / Steam Deck','Outra'];
+  get produtosEstoqueBaixo():Produto[]{
+    return this.produtos.filter(p=>p.ativo && p.condicao==='NOVO' && p.estoque<=5)
+      .sort((a,b)=>a.estoque-b.estoque || a.nome.localeCompare(b.nome,'pt-BR'));
+  }
+  irParaProduto(p:Produto){this.aba='produtos';this.editarProduto(p);window.scrollTo(0,0);}
   produtoId:number|null=null;
   produtoForm=this.novoProduto();usuarioForm=this.novoUsuario();
   ufs=['SP','RJ','MG','ES','PR','SC','RS','BA','PE','CE','DF','GO','PA','AM','AC','AL','AP','MA','MT','MS','PB','PI','RN','RO','RR','SE','TO'];
