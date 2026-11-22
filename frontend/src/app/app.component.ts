@@ -23,7 +23,7 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
 </div></header>
 <main class="container">
   <app-vitrine *ngIf="pagina==='loja'" [produtos]="produtos" [carregando]="carregando" [erro]="erroProdutos" (adicionar)="adicionar($event)" (verDetalhes)="abrirProduto($event)" [favoritos]="favoritos" (favoritar)="alternarFavorito($event)"/>
-  <app-produto-detalhe *ngIf="pagina==='produto' && produtoSelecionado" [produto]="produtoSelecionado" [catalogo]="produtos" [favorito]="favoritos.includes(produtoSelecionado.id)" (favoritar)="alternarFavorito($event)" (verProduto)="abrirProduto($event)" (voltar)="ir('loja')" (adicionar)="adicionarVarios($event)"/>
+  <app-produto-detalhe *ngIf="pagina==='produto' && produtoSelecionado" [produto]="produtoSelecionado" [catalogo]="produtos" [favorito]="favoritos.includes(produtoIdSelecionado || -1)" (favoritar)="alternarFavorito($event)" (verProduto)="abrirProduto($event)" (voltar)="ir('loja')" (adicionar)="adicionarVarios($event)"/>
   <section class="section narrow" *ngIf="pagina==='produto' && !produtoSelecionado">
     <div class="empty">Este produto não está mais disponível. <button type="button" class="link" (click)="ir('loja')">Voltar à loja</button></div>
   </section>
