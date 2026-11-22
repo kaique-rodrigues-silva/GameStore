@@ -16,9 +16,37 @@ class LojaController {
     private final ProdutoRepo produtos;
     private final Autenticacao auth;
     private final CompraService compras;
-    LojaController(ProdutoRepo produtos,Autenticacao auth,CompraService compras){this.produtos=produtos;this.auth=auth;this.compras=compras;}
+    private final FavoritoRepo favoritos;
+    LojaController(ProdutoRepo produtos,Autenticacao auth,CompraService compras,FavoritoRepo favoritos){
+        this.produtos=produtos;this.auth=auth;this.compras=compras;this.favoritos=favoritos;
+    }
     @GetMapping("/produtos")
     public List<Produto> produtos(){return produtos.findByAtivoTrueOrderByIdAsc();}
+    @GetMapping("/favoritos")
+    public List<Long> favoritos(@RequestHeader(value="Authorization",required=false) String token){
+        Long contaId=auth.cliente(token).id;
+        return favoritos.findByContaIdOrderByIdDesc(contaId).stream().map(f->f.produtoId)
+            .filter(id->produtos.findById(id).map(p->p.ativo).orElse(false)).toList();
+    }
+    @PostMapping("/favoritos/{produtoId}")
+    @Transactional
+    public Map<String,String> favoritar(@RequestHeader(value="Authorization",required=false) String token,@PathVariable Long produtoId){
+        Long contaId=auth.cliente(token).id;
+        Produto produto=produtos.findById(produtoId).orElseThrow(
+            ()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado"));
+        if(!produto.ativo)throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto indisponível");
+        if(favoritos.findByContaIdAndProdutoId(contaId,produtoId).isEmpty()){
+            Favorito f=new Favorito();f.contaId=contaId;f.produtoId=produtoId;favoritos.save(f);
+        }
+        return Map.of("mensagem","Produto favoritado");
+    }
+    @DeleteMapping("/favoritos/{produtoId}")
+    @Transactional
+    public Map<String,String> desfavoritar(@RequestHeader(value="Authorization",required=false) String token,@PathVariable Long produtoId){
+        Long contaId=auth.cliente(token).id;
+        favoritos.findByContaIdAndProdutoId(contaId,produtoId).ifPresent(favoritos::delete);
+        return Map.of("mensagem","Favorito removido");
+    }
     @PostMapping("/comprar")
     public Map<String,Object> comprar(@RequestHeader(value="Authorization",required=false) String token,
                                      @RequestBody CompraService.NovoPedido pedido) {
