@@ -12,6 +12,7 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
   <button type="button" class="logo" (click)="ir('loja')"><span class="logo-box">G</span> GAME<span>STORE</span></button>
   <div class="header-actions"><button (click)="ir('loja')">Loja</button>
     <button *ngIf="api.usuario()?.perfil==='CLIENTE'" (click)="ir('pedidos')">Meus pedidos</button>
+    <button *ngIf="api.usuario()?.perfil==='CLIENTE'" (click)="ir('favoritos')">♥ Meus favoritos</button>
     <button *ngIf="api.usuario()?.perfil==='ADMIN'" (click)="ir('admin')">Administração</button>
 
     <button *ngIf="!api.usuario()" (click)="ir('login')">Entrar</button>
@@ -21,8 +22,8 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
   </div>
 </div></header>
 <main class="container">
-  <app-vitrine *ngIf="pagina==='loja'" [produtos]="produtos" [carregando]="carregando" [erro]="erroProdutos" (adicionar)="adicionar($event)" (verDetalhes)="abrirProduto($event)"/>
-  <app-produto-detalhe *ngIf="pagina==='produto' && produtoSelecionado" [produto]="produtoSelecionado" (voltar)="ir('loja')" (adicionar)="adicionarVarios($event)"/>
+  <app-vitrine *ngIf="pagina==='loja'" [produtos]="produtos" [carregando]="carregando" [erro]="erroProdutos" (adicionar)="adicionar($event)" (verDetalhes)="abrirProduto($event)" [favoritos]="favoritos" (favoritar)="alternarFavorito($event)"/>
+  <app-produto-detalhe *ngIf="pagina==='produto' && produtoSelecionado" [produto]="produtoSelecionado" [catalogo]="produtos" [favorito]="favoritos.includes(produtoSelecionado.id)" (favoritar)="alternarFavorito($event)" (verProduto)="abrirProduto($event)" (voltar)="ir('loja')" (adicionar)="adicionarVarios($event)"/>
   <section class="section narrow" *ngIf="pagina==='produto' && !produtoSelecionado">
     <div class="empty">Este produto não está mais disponível. <button type="button" class="link" (click)="ir('loja')">Voltar à loja</button></div>
   </section>
@@ -70,6 +71,26 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
     </form><p class="muted">Já tem uma conta? <button class="link" (click)="ir('login')">Entrar</button></p>
   </div></div>
   <app-carrinho *ngIf="pagina==='carrinho'" [itens]="carrinho" (atualizar)="atualizarQuantidade($event)" (remover)="remover($event)" (concluir)="compraConcluida()" (navegar)="ir($event)"/>
+  <section class="section narrow" *ngIf="pagina==='favoritos'">
+    <div class="eyebrow purple">SUA CONTA</div><h2>Meus favoritos</h2>
+    <p class="muted" *ngIf="erroFavoritos">{{erroFavoritos}}</p>
+    <div *ngIf="!produtosFavoritos.length" class="empty">Você ainda não salvou nenhum produto. Clique no coração para adicionar aos favoritos.</div>
+    <div class="products" *ngIf="produtosFavoritos.length">
+      <article class="product" *ngFor="let p of produtosFavoritos">
+        <button type="button" class="favorite-heart is-favorite" (click)="alternarFavorito(p)" [attr.aria-label]="'Remover '+p.nome+' dos favoritos'">♥</button>
+        <a class="product-image-link favorite-image" [href]="'#/produto/'+p.id" (click)="abrirProduto(p)">
+          <img [src]="p.imagem || imagemPadrao(p)" [alt]="p.nome" (error)="imagemQuebrou($event,p)"/>
+        </a>
+        <div class="product-body">
+          <div class="meta">{{p.plataforma}} · {{p.categoria==='JOGO'?'Jogo':p.categoria==='CONSOLE'?'Console':'Acessório'}}</div>
+          <h3><a [href]="'#/produto/'+p.id" (click)="abrirProduto(p)">{{p.nome}}</a></h3>
+          <span class="stock">{{p.estoque>0?'Disponível':'Sem estoque'}}</span>
+          <div class="price">{{p.preco | currency:'BRL'}}</div>
+          <button class="button full" type="button" [disabled]="p.estoque<1" (click)="adicionar(p)">Adicionar ao carrinho</button>
+        </div>
+      </article>
+    </div>
+  </section>
   <section class="section narrow" *ngIf="pagina==='pedidos'"><div class="eyebrow purple">SUA CONTA</div><h2>Meus pedidos</h2>
     <div class="alert error" *ngIf="erroPedidos">{{erroPedidos}}</div>
     <div class="panel" *ngFor="let pedido of pedidos"><div class="between"><strong>Pedido #{{pedido.id}}</strong><strong>{{pedido.total | currency:'BRL'}}</strong></div>
@@ -139,13 +160,14 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
 export class AppComponent implements OnInit {
   pagina='loja';produtos:Produto[]=[];carrinho:Linha[]=[];pedidos:Pedido[]=[];
   resumoCarrinhoAberto=false;
+  favoritos:number[]=[];erroFavoritos='';
   carregando=true;erroProdutos='';erroAuth='';erroPedidos='';enviando=false;
   loginEmail='';loginSenha='';novoNome='';novoEmail='';novoCpf='';novaSenha='';
   novoTipo:'PF'|'PJ'='PF';novoCnpj='';novaIe='';novaIeUf='';
   ufs=['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
   senhaExclusao='';confirmacaoExclusao='';erroExclusao='';excluindo=false;
   constructor(public api:ApiService) { }
-  async ngOnInit(){await this.api.restaurar();await this.carregarProdutos();this.sincronizarProdutoPelaUrl();}
+  async ngOnInit(){await this.api.restaurar();await this.carregarProdutos();await this.carregarFavoritos();this.sincronizarProdutoPelaUrl();}
   @HostListener('window:hashchange')
   aoMudarEndereco(){
     this.sincronizarProdutoPelaUrl();
@@ -176,6 +198,26 @@ export class AppComponent implements OnInit {
   }
   async carregarProdutos(){this.carregando=true;try{this.produtos=await this.api.get<Produto[]>('/loja/produtos');this.erroProdutos='';}
     catch(e){this.erroProdutos=(e as Error).message;}finally{this.carregando=false;}}
+  get produtosFavoritos(){return this.produtos.filter(p=>this.favoritos.includes(p.id));}
+  async carregarFavoritos(){
+    this.favoritos=[];this.erroFavoritos='';
+    if(this.api.usuario()?.perfil!=='CLIENTE')return;
+    try{this.favoritos=await this.api.get<number[]>('/loja/favoritos');}
+    catch(e){this.erroFavoritos=(e as Error).message;}
+  }
+  async alternarFavorito(p:Produto){
+    if(this.api.usuario()?.perfil!=='CLIENTE'){
+      alert('Entre com uma conta de cliente para salvar favoritos.');
+      await this.ir('login');
+      return;
+    }
+    const antes=[...this.favoritos],jaFavorito=antes.includes(p.id);
+    this.favoritos=jaFavorito?antes.filter(id=>id!==p.id):[...antes,p.id];
+    try{
+      if(jaFavorito)await this.api.del('/loja/favoritos/'+p.id);
+      else await this.api.post('/loja/favoritos/'+p.id,{});
+    }catch(e){this.favoritos=antes;alert((e as Error).message);}
+  }
   get quantidade(){return this.carrinho.reduce((s,i)=>s+i.quantidade,0);}
   get subtotal(){return this.carrinho.reduce((total,item)=>total+item.produto.preco*item.quantidade,0);}
   imagemPadrao(p:Produto){return '/assets/placeholder-'+(p.categoria==='CONSOLE'?'console':p.categoria==='ACESSORIO'?'acessorio':'jogo')+'.svg';}
@@ -193,6 +235,10 @@ export class AppComponent implements OnInit {
     this.produtoIdSelecionado=null;
     this.pagina=pagina;this.erroAuth='';window.scrollTo(0,0);
     if(pagina==='loja')await this.carregarProdutos();
+    if(pagina==='favoritos'){
+      if(this.api.usuario()?.perfil!=='CLIENTE'){this.pagina='login';return;}
+      await this.carregarProdutos();await this.carregarFavoritos();
+    }
     if(pagina==='pedidos'){
       if(!this.api.usuario()){this.pagina='login';return;}
       try{this.pedidos=await this.api.get<Pedido[]>('/loja/meus-pedidos');this.erroPedidos='';}
@@ -216,11 +262,11 @@ export class AppComponent implements OnInit {
         ieUf:this.novoTipo==='PJ'?this.novaIeUf:null
       });
       this.loginEmail=this.novoEmail;this.loginSenha=this.novaSenha;await this.api.entrar(this.loginEmail,this.loginSenha);
-      await this.ir(this.carrinho.length?'carrinho':'loja');
+      await this.carregarFavoritos();await this.ir(this.carrinho.length?'carrinho':'loja');
     }catch(e){this.erroAuth=(e as Error).message;}finally{this.enviando=false;}}
   async entrar(){this.enviando=true;this.erroAuth='';try{
       const usuario=await this.api.entrar(this.loginEmail,this.loginSenha);
-      await this.ir(usuario.perfil==='ADMIN'?'admin':this.carrinho.length?'carrinho':'loja');
+      await this.carregarFavoritos();await this.ir(usuario.perfil==='ADMIN'?'admin':this.carrinho.length?'carrinho':'loja');
     }catch(e){this.erroAuth=(e as Error).message;}finally{this.enviando=false;}}
   async excluirMinhaConta(){
     if(this.excluindo || this.confirmacaoExclusao!=='EXCLUIR MINHA CONTA')return;
@@ -228,11 +274,11 @@ export class AppComponent implements OnInit {
     try {
       await this.api.delComCorpo<void>('/auth/minha-conta',{senha:this.senhaExclusao,confirmacao:this.confirmacaoExclusao});
       await this.api.sair();
-      this.senhaExclusao='';this.confirmacaoExclusao='';this.loginSenha='';this.carrinho=[];this.pedidos=[];
+      this.senhaExclusao='';this.confirmacaoExclusao='';this.loginSenha='';this.carrinho=[];this.pedidos=[];this.favoritos=[];
       await this.ir('loja');
       alert('Sua conta e os dados associados foram excluídos do banco ativo.');
     }catch(e){this.erroExclusao=(e as Error).message;}
     finally{this.excluindo=false;}
   }
-  async sair(){await this.api.sair();await this.ir('loja');}
+  async sair(){await this.api.sair();this.favoritos=[];await this.ir('loja');}
 }
