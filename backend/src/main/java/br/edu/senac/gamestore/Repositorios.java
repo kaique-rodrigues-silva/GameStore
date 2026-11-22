@@ -22,3 +22,10 @@ interface ItemPedidoRepo extends JpaRepository<ItemPedido,Long> {
     boolean existsByProdutoId(Long produtoId);
 }
 interface SessaoRepo extends JpaRepository<Sessao,String> { }
+
+interface FavoritoRepo extends JpaRepository<Favorito,Long> {
+    List<Favorito> findByContaIdOrderByIdDesc(Long contaId);
+    Optional<Favorito> findByContaIdAndProdutoId(Long contaId,Long produtoId);
+    void deleteByContaId(Long contaId);
+    void deleteByProdutoId(Long produtoId);
+}
