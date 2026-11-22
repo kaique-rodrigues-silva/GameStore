@@ -53,14 +53,29 @@
 .admin-area .admin-image-url{height:94px}
 
 
-/* Controles do catálogo: filtros à esquerda, ordenação à direita */
-.catalog-controls{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin:2px 0 12px;flex-wrap:wrap}
-.catalog-filter-side{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;min-width:0;flex:1}
-.catalog-control-title{font-size:13px;color:#34405b;font-weight:800;align-self:center;white-space:nowrap;padding-bottom:9px}
-.catalog-filter-side label,.catalog-order{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:#596480;min-width:155px}
-.catalog-controls select{margin-top:0;width:100%;padding:10px 12px;font-size:13px;background:#fff;min-height:40px}
-.catalog-order{margin-left:auto;min-width:215px}
-.catalog-clear{background:transparent;border:0;color:#7042cb;font-size:12px;font-weight:800;padding:10px 2px;white-space:nowrap}
+
+/* Filtro e ordenação compactos do catálogo */
+.store-toolbar{display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:16px !important;width:100%;margin:0 0 12px;position:relative;z-index:4}
+.store-filter-control,.store-sort-control{position:relative;width:auto !important;flex:none !important;min-width:0}
+.store-filter-trigger,.store-sort-trigger{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;border:1px solid #e0dff0;border-radius:8px;background:#fff;color:#424a65;padding:11px 14px;min-height:42px;font-size:13px;font-weight:700;box-shadow:0 1px 2px #171f3908}
+.store-filter-trigger:hover,.store-sort-trigger:hover,.store-filter-trigger.selected{border-color:#ac8ef0;background:#f9f6ff;color:#623dc4}
+.store-filter-count{display:inline-flex;align-items:center;justify-content:center;border-radius:20px;background:#794bd4;color:#fff;min-width:20px;height:20px;padding:0 5px;font-size:11px}
+.store-chevron{color:#8153cf;font-size:18px;line-height:1}
+.store-sort-trigger{background:transparent;border-color:transparent;box-shadow:none;padding-right:2px;gap:7px}
+.store-sort-trigger span:first-child{color:#6a738b;font-weight:500}
+.store-sort-trigger strong{color:#282d49;font-size:13px}
+.store-dropdown{position:absolute;top:calc(100% + 6px);background:#fff;border:1px solid #e4e3ed;border-radius:12px;box-shadow:0 12px 38px #1b1f3c24;z-index:15}
+.store-filter-menu{left:0;width:300px;max-width:calc(100vw - 32px);padding:17px;display:flex;flex-direction:column;gap:12px}
+.store-dropdown-heading{font-weight:800;font-size:14px;color:#252c45;padding-bottom:4px}
+.store-filter-field{display:block;min-width:0}
+.store-filter-field label{display:block;font-size:12px;font-weight:700;color:#5d6682;margin-bottom:5px}
+.store-filter-field select{display:block;width:100% !important;max-width:100% !important;min-width:0 !important;font-size:13px !important;margin:0 !important;padding:10px 12px !important;border:1px solid #dce0ef;border-radius:8px;background:#fff}
+.store-filter-menu-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:4px}
+.store-filter-reset{border:0;background:transparent;color:#6b42c4;font-size:12px;font-weight:800;padding:8px}
+.store-filter-apply{border:0;border-radius:8px;background:#7645d7;color:#fff;font-size:12px;font-weight:800;padding:11px 14px}
+.store-sort-menu{right:0;width:208px;padding:4px;display:flex;flex-direction:column;align-items:stretch}
+.store-sort-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:7px;padding:12px 11px;font-size:13px;color:#333b53}
+.store-sort-menu button:hover{background:#f3effd;color:#673ecc}
+.store-sort-menu button.active{background:#eee8fd;color:#673ecc;font-weight:800}
 .catalog-result-count{font-size:12px;color:#7b85a1;margin:0 0 14px}
-@media(max-width:900px){.catalog-controls{align-items:stretch;gap:14px}.catalog-order{margin-left:0}.catalog-filter-side{flex:1 1 100%}}
-@media(max-width:600px){.catalog-filter-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.catalog-control-title{grid-column:1/-1;padding:0}.catalog-filter-side label{min-width:0}.catalog-order{width:100%;min-width:0}.catalog-clear{justify-self:start}.catalog-controls select{font-size:12px}}
+@media(max-width:580px){.store-toolbar{gap:4px !important}.store-filter-trigger{padding:9px 10px;font-size:12px}.store-sort-trigger{padding:9px 0;font-size:11px;gap:5px}.store-sort-trigger strong{font-size:11px}.store-sort-trigger span:first-child{font-size:11px}.store-sort-menu{right:0;width:196px}}
