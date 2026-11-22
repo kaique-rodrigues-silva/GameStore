@@ -71,6 +71,9 @@ import { Produto } from './api.service';
   <div *ngIf="carregando" class="empty">Carregando catálogo...</div>
   <div class="products">
     <article class="product" *ngFor="let p of filtrados">
+      <button type="button" class="favorite-heart" [class.is-favorite]="favoritos.includes(p.id)"
+        (click)="favoritar.emit(p)" [attr.aria-label]="favoritos.includes(p.id)?'Remover '+p.nome+' dos favoritos':'Adicionar '+p.nome+' aos favoritos'"
+        [attr.title]="favoritos.includes(p.id)?'Remover dos favoritos':'Adicionar aos favoritos'">{{favoritos.includes(p.id)?'♥':'♡'}}</button>
       <div class="product-photo">
         <a class="product-image-link" [href]="'#/produto/'+p.id" (click)="verDetalhes.emit(p)" [attr.aria-label]="'Ver detalhes de '+p.nome">
           <img [src]="(p.imagem && !falhas[p.id]) ? p.imagem : imagemPadrao(p)" [alt]="p.nome" (error)="falhas[p.id]=true"/>
@@ -88,10 +91,12 @@ import { Produto } from './api.service';
 `})
 export class VitrineComponent {
   @Input() produtos:Produto[]=[];
+  @Input() favoritos:number[]=[];
   @Input() carregando=false;
   @Input() erro='';
   @Output() adicionar=new EventEmitter<Produto>();
   @Output() verDetalhes=new EventEmitter<Produto>();
+  @Output() favoritar=new EventEmitter<Produto>();
   pesquisa='';categoria='TODOS';falhas:Record<number,boolean>={};
   plataformaSelecionada='';marcaSelecionada='';condicaoSelecionada='';ordenacao='';
   filtroAberto=false;ordemAberta=false;
