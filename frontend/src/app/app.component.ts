@@ -1,12 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Linha, Produto, Pedido } from './api.service';
 import { VitrineComponent } from './vitrine.component';
 import { CarrinhoComponent } from './carrinho.component';
 import { AdminComponent } from './admin.component';
+import { ProdutoDetalheComponent } from './produto-detalhe.component';
 
-@Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule,VitrineComponent,CarrinhoComponent,AdminComponent],template:`
+@Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule,VitrineComponent,CarrinhoComponent,AdminComponent,ProdutoDetalheComponent],template:`
 <header class="top"><div class="container header-row">
   <button type="button" class="logo" (click)="ir('loja')"><span class="logo-box">G</span> GAME<span>STORE</span></button>
   <div class="header-actions"><button (click)="ir('loja')">Loja</button>
@@ -20,7 +21,11 @@ import { AdminComponent } from './admin.component';
   </div>
 </div></header>
 <main class="container">
-  <app-vitrine *ngIf="pagina==='loja'" [produtos]="produtos" [carregando]="carregando" [erro]="erroProdutos" (adicionar)="adicionar($event)"/>
+  <app-vitrine *ngIf="pagina==='loja'" [produtos]="produtos" [carregando]="carregando" [erro]="erroProdutos" (adicionar)="adicionar($event)" (verDetalhes)="abrirProduto($event)"/>
+  <app-produto-detalhe *ngIf="pagina==='produto' && produtoSelecionado" [produto]="produtoSelecionado" (voltar)="ir('loja')" (adicionar)="adicionarVarios($event)"/>
+  <section class="section narrow" *ngIf="pagina==='produto' && !produtoSelecionado">
+    <div class="empty">Este produto não está mais disponível. <button type="button" class="link" (click)="ir('loja')">Voltar à loja</button></div>
+  </section>
   <div *ngIf="pagina==='login'" class="auth-wrap"><div class="panel auth-panel">
     <div class="eyebrow purple">SUA CONTA</div><h2>Entrar na GameStore</h2>
     <div class="alert error" *ngIf="erroAuth">{{erroAuth}}</div>
@@ -140,7 +145,35 @@ export class AppComponent implements OnInit {
   ufs=['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
   senhaExclusao='';confirmacaoExclusao='';erroExclusao='';excluindo=false;
   constructor(public api:ApiService) { }
-  async ngOnInit(){await this.api.restaurar();await this.carregarProdutos();}
+  async ngOnInit(){await this.api.restaurar();await this.carregarProdutos();this.sincronizarProdutoPelaUrl();}
+  @HostListener('window:hashchange')
+  aoMudarEndereco(){
+    this.sincronizarProdutoPelaUrl();
+  }
+  get produtoSelecionado():Produto|null{
+    return this.produtos.find(p=>p.id===this.produtoIdSelecionado) || null;
+  }
+  produtoIdSelecionado:number|null=null;
+  sincronizarProdutoPelaUrl(){
+    const rota=window.location.hash.match(/^#\/produto\/(\d+)$/);
+    if(rota){
+      this.produtoIdSelecionado=Number(rota[1]);
+      this.resumoCarrinhoAberto=false;
+      this.pagina='produto';
+    }else if(this.pagina==='produto'){
+      this.produtoIdSelecionado=null;
+      this.pagina='loja';
+    }
+  }
+  abrirProduto(produto:Produto){
+    this.produtoIdSelecionado=produto.id;
+    this.pagina='produto';this.resumoCarrinhoAberto=false;
+    window.location.hash='/produto/'+produto.id;
+    window.scrollTo(0,0);
+  }
+  adicionarVarios(dados:{produto:Produto;quantidade:number}){
+    for(let i=0;i<dados.quantidade;i++)this.adicionar(dados.produto);
+  }
   async carregarProdutos(){this.carregando=true;try{this.produtos=await this.api.get<Produto[]>('/loja/produtos');this.erroProdutos='';}
     catch(e){this.erroProdutos=(e as Error).message;}finally{this.carregando=false;}}
   get quantidade(){return this.carrinho.reduce((s,i)=>s+i.quantidade,0);}
@@ -154,6 +187,10 @@ export class AppComponent implements OnInit {
   abrirPagamento(){this.resumoCarrinhoAberto=false;void this.ir('carrinho');}
   async ir(pagina:string){
     this.resumoCarrinhoAberto=false;
+    if(window.location.hash.startsWith('#/produto/')){
+      history.pushState(null,'',window.location.pathname+window.location.search);
+    }
+    this.produtoIdSelecionado=null;
     this.pagina=pagina;this.erroAuth='';window.scrollTo(0,0);
     if(pagina==='loja')await this.carregarProdutos();
     if(pagina==='pedidos'){
