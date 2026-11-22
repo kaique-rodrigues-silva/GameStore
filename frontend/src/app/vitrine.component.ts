@@ -18,39 +18,52 @@ import { Produto } from './api.service';
   <nav class="filters" aria-label="Filtrar produtos">
     <button *ngFor="let filtro of filtros" type="button" [class.active]="categoria===filtro.v" (click)="categoria=filtro.v">{{filtro.label}}</button>
   </nav>
-  <div class="catalog-controls">
-    <div class="catalog-filter-side">
-      <span class="catalog-control-title">Filtrar por</span>
-      <label>Plataforma
-        <select name="filtroPlataforma" [(ngModel)]="plataformaSelecionada" (ngModelChange)="selecionarPlataforma($event)">
-          <option value="">Todas as plataformas</option>
-          <option *ngFor="let p of plataformasDisponiveis" [value]="p">{{nomePlataforma(p)}}</option>
-        </select>
-      </label>
-      <label>Marca
-        <select name="filtroMarca" [(ngModel)]="marcaSelecionada" (ngModelChange)="selecionarMarca($event)">
-          <option value="">Todas as marcas</option>
-          <option *ngFor="let marca of marcasDisponiveis" [value]="marca">{{marca}}</option>
-        </select>
-      </label>
-      <label>Condição
-        <select name="filtroCondicao" [(ngModel)]="condicaoSelecionada">
-          <option value="">Todas</option>
-          <option value="NOVO">Novos</option>
-          <option value="USADO">Seminovos</option>
-        </select>
-      </label>
-      <button type="button" class="catalog-clear" *ngIf="plataformaSelecionada || marcaSelecionada || condicaoSelecionada" (click)="limparFiltros()">Limpar filtros</button>
+  <div class="store-toolbar">
+    <div class="store-filter-control">
+      <button type="button" class="store-filter-trigger" [class.selected]="quantidadeFiltros>0 || filtroAberto"
+        (click)="filtroAberto=!filtroAberto;ordemAberta=false" [attr.aria-expanded]="filtroAberto">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+        Filtrar por <span class="store-filter-count" *ngIf="quantidadeFiltros">{{quantidadeFiltros}}</span>
+        <span class="store-chevron">{{filtroAberto?'⌃':'⌄'}}</span>
+      </button>
+      <div class="store-dropdown store-filter-menu" *ngIf="filtroAberto">
+        <div class="store-dropdown-heading">Refinar produtos</div>
+        <div class="store-filter-field">
+          <label for="store-plataforma">Plataforma</label>
+          <select id="store-plataforma" [(ngModel)]="plataformaSelecionada" (ngModelChange)="selecionarPlataforma($event)">
+            <option value="">Todas as plataformas</option>
+            <option *ngFor="let p of plataformasDisponiveis" [value]="p">{{nomePlataforma(p)}}</option>
+          </select>
+        </div>
+        <div class="store-filter-field">
+          <label for="store-marca">Marca</label>
+          <select id="store-marca" [(ngModel)]="marcaSelecionada" (ngModelChange)="selecionarMarca($event)">
+            <option value="">Todas as marcas</option>
+            <option *ngFor="let marca of marcasDisponiveis" [value]="marca">{{marca}}</option>
+          </select>
+        </div>
+        <div class="store-filter-field">
+          <label for="store-condicao">Condição</label>
+          <select id="store-condicao" [(ngModel)]="condicaoSelecionada">
+            <option value="">Novos e seminovos</option>
+            <option value="NOVO">Somente novos</option>
+            <option value="USADO">Somente seminovos</option>
+          </select>
+        </div>
+        <div class="store-filter-menu-actions">
+          <button type="button" class="store-filter-reset" (click)="limparFiltros()">Limpar</button>
+          <button type="button" class="store-filter-apply" (click)="filtroAberto=false">Ver {{filtrados.length}} produtos</button>
+        </div>
+      </div>
     </div>
-    <label class="catalog-order">Ordenar por
-      <select name="ordenacao" [(ngModel)]="ordenacao">
-        <option value="PADRAO">Ordem padrão</option>
-        <option value="AZ">Nome: A–Z</option>
-        <option value="ZA">Nome: Z–A</option>
-        <option value="PRECO_ASC">Preço: menor para maior</option>
-        <option value="PRECO_DESC">Preço: maior para menor</option>
-      </select>
-    </label>
+    <div class="store-sort-control">
+      <button type="button" class="store-sort-trigger" (click)="ordemAberta=!ordemAberta;filtroAberto=false" [attr.aria-expanded]="ordemAberta">
+        <span>Ordenar por</span> <strong>{{rotuloOrdenacao}}</strong> <span class="store-chevron">{{ordemAberta?'⌃':'⌄'}}</span>
+      </button>
+      <div class="store-dropdown store-sort-menu" *ngIf="ordemAberta">
+        <button type="button" *ngFor="let opcao of opcoesOrdenacao" [class.active]="ordenacao===opcao.valor" (click)="definirOrdenacao(opcao.valor)">{{opcao.rotulo}}</button>
+      </div>
+    </div>
   </div>
   <div class="catalog-result-count" *ngIf="!carregando && !erro">{{filtrados.length}} {{filtrados.length===1?'produto encontrado':'produtos encontrados'}}</div>
   <div *ngIf="erro" class="alert error">{{erro}}</div>
@@ -78,6 +91,17 @@ export class VitrineComponent {
   @Output() adicionar=new EventEmitter<Produto>();
   pesquisa='';categoria='TODOS';falhas:Record<number,boolean>={};
   plataformaSelecionada='';marcaSelecionada='';condicaoSelecionada='';ordenacao='PADRAO';
+  filtroAberto=false;ordemAberta=false;
+  opcoesOrdenacao=[
+    {valor:'PADRAO',rotulo:'Mais relevantes'},
+    {valor:'AZ',rotulo:'Nome: A–Z'},
+    {valor:'ZA',rotulo:'Nome: Z–A'},
+    {valor:'PRECO_ASC',rotulo:'Menor preço'},
+    {valor:'PRECO_DESC',rotulo:'Maior preço'}
+  ];
+  get rotuloOrdenacao(){return this.opcoesOrdenacao.find(o=>o.valor===this.ordenacao)?.rotulo||'Mais relevantes';}
+  get quantidadeFiltros(){return [this.plataformaSelecionada,this.marcaSelecionada,this.condicaoSelecionada].filter(Boolean).length;}
+  definirOrdenacao(valor:string){this.ordenacao=valor;this.ordemAberta=false;}
   nomeCategoria(p:Produto){return p.categoria==='CONSOLE'?'Console':p.categoria==='ACESSORIO'?'Acessório':'Jogo';}
   imagemPadrao(p:Produto){return '/assets/placeholder-'+(p.categoria==='CONSOLE'?'console':p.categoria==='ACESSORIO'?'acessorio':'jogo')+'.svg';}
   filtros=[{v:'TODOS',label:'Todos'},{v:'JOGO',label:'Jogos'},{v:'CONSOLE',label:'Consoles'},{v:'ACESSORIO',label:'Acessórios'},{v:'USADO',label:'Seminovos'}];
