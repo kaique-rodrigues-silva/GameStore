@@ -22,13 +22,13 @@ import { Produto } from './api.service';
     <div class="catalog-filter-side">
       <span class="catalog-control-title">Filtrar por</span>
       <label>Plataforma
-        <select name="filtroPlataforma" [(ngModel)]="plataformaSelecionada">
+        <select name="filtroPlataforma" [(ngModel)]="plataformaSelecionada" (ngModelChange)="selecionarPlataforma($event)">
           <option value="">Todas as plataformas</option>
           <option *ngFor="let p of plataformasDisponiveis" [value]="p">{{nomePlataforma(p)}}</option>
         </select>
       </label>
       <label>Marca
-        <select name="filtroMarca" [(ngModel)]="marcaSelecionada">
+        <select name="filtroMarca" [(ngModel)]="marcaSelecionada" (ngModelChange)="selecionarMarca($event)">
           <option value="">Todas as marcas</option>
           <option *ngFor="let marca of marcasDisponiveis" [value]="marca">{{marca}}</option>
         </select>
@@ -103,6 +103,12 @@ export class VitrineComponent {
     const nomes:Record<string,string>={'PS5':'PlayStation 5','PS4':'PlayStation 4','PS3':'PlayStation 3',
       'PS2':'PlayStation 2','PS1':'PlayStation 1','PSP':'PlayStation Portable'};
     return nomes[valor.toUpperCase()]||valor;
+  }
+  selecionarPlataforma(valor:string){
+    if(valor){this.marcaSelecionada='';if(this.categoria==='CONSOLE'||this.categoria==='ACESSORIO')this.categoria='TODOS';}
+  }
+  selecionarMarca(valor:string){
+    if(valor){this.plataformaSelecionada='';if(this.categoria==='JOGO')this.categoria='TODOS';}
   }
   limparFiltros(){this.plataformaSelecionada='';this.marcaSelecionada='';this.condicaoSelecionada='';}
   private corresponde(valor:string,selecionado:string):boolean{
