@@ -72,11 +72,13 @@ import { Produto } from './api.service';
   <div class="products">
     <article class="product" *ngFor="let p of filtrados">
       <div class="product-photo">
-        <img [src]="(p.imagem && !falhas[p.id]) ? p.imagem : imagemPadrao(p)" [alt]="p.imagem && !falhas[p.id] ? p.nome : 'Ilustração padrão de '+nomeCategoria(p)" (error)="falhas[p.id]=true"/>
+        <a class="product-image-link" [href]="'#/produto/'+p.id" (click)="verDetalhes.emit(p)" [attr.aria-label]="'Ver detalhes de '+p.nome">
+          <img [src]="(p.imagem && !falhas[p.id]) ? p.imagem : imagemPadrao(p)" [alt]="p.nome" (error)="falhas[p.id]=true"/>
+        </a>
         <span *ngIf="p.condicao==='USADO'" class="pill">Seminovo</span>
       </div>
       <div class="product-body"><div class="meta">{{p.plataforma ? p.plataforma+' · ' : ''}}{{nomeCategoria(p)}}</div>
-        <h3>{{p.nome}}</h3><span class="stock">{{p.estoque>0?'Disponível':'Sem estoque'}}</span>
+        <h3><a [href]="'#/produto/'+p.id" (click)="verDetalhes.emit(p)">{{p.nome}}</a></h3><span class="stock">{{p.estoque>0?'Disponível':'Sem estoque'}}</span>
         <div class="price">{{p.preco | currency:'BRL'}}</div>
         <button class="button full" [disabled]="p.estoque<1" (click)="adicionar.emit(p)">{{p.estoque>0?'Adicionar ao carrinho':'Indisponível'}}</button>
       </div>
@@ -89,17 +91,17 @@ export class VitrineComponent {
   @Input() carregando=false;
   @Input() erro='';
   @Output() adicionar=new EventEmitter<Produto>();
+  @Output() verDetalhes=new EventEmitter<Produto>();
   pesquisa='';categoria='TODOS';falhas:Record<number,boolean>={};
-  plataformaSelecionada='';marcaSelecionada='';condicaoSelecionada='';ordenacao='PADRAO';
+  plataformaSelecionada='';marcaSelecionada='';condicaoSelecionada='';ordenacao='';
   filtroAberto=false;ordemAberta=false;
   opcoesOrdenacao=[
-    {valor:'PADRAO',rotulo:'Mais relevantes'},
     {valor:'AZ',rotulo:'Nome: A–Z'},
     {valor:'ZA',rotulo:'Nome: Z–A'},
     {valor:'PRECO_ASC',rotulo:'Menor preço'},
     {valor:'PRECO_DESC',rotulo:'Maior preço'}
   ];
-  get rotuloOrdenacao(){return this.opcoesOrdenacao.find(o=>o.valor===this.ordenacao)?.rotulo||'Mais relevantes';}
+  get rotuloOrdenacao(){return this.opcoesOrdenacao.find(o=>o.valor===this.ordenacao)?.rotulo||'Selecionar';}
   get quantidadeFiltros(){return [this.plataformaSelecionada,this.marcaSelecionada,this.condicaoSelecionada].filter(Boolean).length;}
   definirOrdenacao(valor:string){this.ordenacao=valor;this.ordemAberta=false;}
   nomeCategoria(p:Produto){return p.categoria==='CONSOLE'?'Console':p.categoria==='ACESSORIO'?'Acessório':'Jogo';}
