@@ -30,6 +30,12 @@ class Produto {
     @Column(length=2000) public String descricao;
     @Lob @Column(columnDefinition="CLOB") public String imagem;
     @Column(nullable=false, precision=12, scale=2) public BigDecimal preco;
+    // Preço promocional opcional; vazio significa que não há oferta.
+    @Column(precision=12, scale=2) public BigDecimal precoPromocional;
+    @Transient public BigDecimal getPrecoEfetivo(){
+        return precoPromocional!=null && precoPromocional.signum()>=0 && precoPromocional.compareTo(preco)<0
+            ? precoPromocional:preco;
+    }
     @Column(nullable=false) public int estoque;
     @Column(nullable=false) public boolean ativo = true;
     // Excluídos ficam ocultos do catálogo e da administração; pedidos antigos preservam seu histórico.
