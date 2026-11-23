@@ -9,7 +9,16 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
 
 @Component({selector:'app-root',standalone:true,imports:[CommonModule,FormsModule,VitrineComponent,CarrinhoComponent,AdminComponent,ProdutoDetalheComponent],template:`
 <header class="top"><div class="container header-row">
-  <button type="button" class="logo" (click)="ir('loja')"><span class="logo-box">G</span> GAME<span>STORE</span></button>
+  <button type="button" class="logo" (click)="ir('loja')" aria-label="GameStore — voltar para a loja"><span class="logo-bag" aria-hidden="true">
+    <svg class="logo-bag-icon" viewBox="0 0 48 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="bagPurple" x1="4" y1="8" x2="43" y2="51" gradientUnits="userSpaceOnUse"><stop stop-color="#a76aff"/><stop offset="1" stop-color="#6530d6"/></linearGradient></defs>
+      <path d="M15 14V11C15 5.5 19 2 24 2S33 5.5 33 11V14" stroke="#ae78ff" stroke-width="4" stroke-linecap="round"/>
+      <path d="M9 13H39L44 49C44.3 51.3 42.7 53 40 53H8C5.3 53 3.7 51.3 4 49L9 13Z" fill="url(#bagPurple)"/>
+      <path d="M16.5 29C13.5 29 11.5 31 10.5 35L9.3 40C8.5 44 11.5 46 14.6 43.8L20 40H28L33.4 43.8C36.5 46 39.5 44 38.7 40L37.5 35C36.5 31 34.5 29 31.5 29H16.5Z" fill="white"/>
+      <path d="M18 33V39M15 36H21" stroke="#824de5" stroke-width="2.7" stroke-linecap="round"/>
+      <circle cx="30" cy="34" r="1.65" fill="#824de5"/><circle cx="33.5" cy="37" r="1.65" fill="#824de5"/>
+    </svg>
+  </span><span class="logo-word">GAME<span>STORE</span></span></button>
   <div class="header-actions"><button (click)="ir('loja')">Loja</button>
     <button *ngIf="api.usuario()?.perfil==='CLIENTE'" (click)="ir('pedidos')">Meus pedidos</button>
     <button *ngIf="api.usuario()?.perfil==='CLIENTE'" (click)="ir('favoritos')">♥ Meus favoritos</button>
