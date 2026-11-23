@@ -143,3 +143,17 @@
 .low-stock-item>span{flex:1}
 .low-stock-item strong{color:#815216;white-space:nowrap}
 @media(max-width:720px){.related-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.related-image{height:150px}.favorite-image{height:170px}.low-stock-title{align-items:flex-start}.low-stock-item{flex-wrap:wrap}}
+
+
+/* Ações separadas da lista de produtos administrativos */
+.product-admin-row{align-items:center;gap:18px;min-width:0}
+.admin-product-info{flex:1;min-width:0;overflow-wrap:anywhere}
+.admin-product-info strong{display:block;font-size:13px;line-height:1.4}
+.admin-product-info .meta{margin-top:4px}
+.admin-product-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.admin-action{border:1px solid #ded9ed;background:#fff;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap}
+.admin-action.edit{color:#6940c3;border-color:#d9ccf6;background:#f6f1ff}
+.admin-action.archive{color:#8a621d;border-color:#f1dfb8;background:#fff9e9}
+.admin-action.delete{color:#b43153;border-color:#f7cfda;background:#fff3f6}
+.admin-action:hover:not(:disabled){filter:brightness(.97);transform:translateY(-1px)}
+@media(max-width:900px){.product-admin-row{align-items:flex-start;flex-direction:column}.admin-product-actions{justify-content:flex-start;width:100%}}
