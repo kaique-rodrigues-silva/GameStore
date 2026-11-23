@@ -159,37 +159,15 @@
 @media(max-width:900px){.product-admin-row{align-items:flex-start;flex-direction:column}.admin-product-actions{justify-content:flex-start;width:100%}}
 
 
-/* Ofertas, preços promocionais e carrossel da página inicial */
-.store-showcase{min-height:345px;position:relative;isolation:isolate;padding-bottom:28px;background:linear-gradient(112deg,#151b38,#302653 62%,#6840aa);overflow:hidden}
-.store-showcase-text{position:relative;z-index:2;max-width:64%;padding:48px 6% 38px}
-.store-showcase-text h1{font-size:clamp(29px,4vw,49px);line-height:1.14;max-width:620px;overflow-wrap:anywhere}
-.store-showcase-text p{max-width:530px;font-size:14px;line-height:1.7}
-.store-showcase-art{position:absolute;inset:0 3% 0 auto;width:39%;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.store-showcase-art img{position:relative;z-index:1;max-width:80%;max-height:83%;object-fit:contain;filter:drop-shadow(0 19px 23px #0c0a2b60)}
-.showcase-orbit{position:absolute;inset:13% 7%;border-radius:50%;border:40px solid #9270ea33}
-.showcase-prices{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 18px}
-.showcase-old-price{color:#c6b5ed;font-size:15px;text-decoration:line-through}
-.showcase-prices strong{font-size:28px;color:#fff}
-.showcase-discount{border-radius:8px;background:#ffdf68;color:#50381b;padding:5px 9px;font-size:12px;font-weight:800}
-.showcase-arrow{position:absolute;z-index:3;top:49%;width:33px;height:45px;transform:translateY(-50%);border:1px solid #ffffff30;border-radius:9px;background:#ffffff20;color:#fff;font-size:29px;line-height:1}
-.showcase-prev{left:10px}.showcase-next{right:10px}
-.showcase-arrow:hover{background:#ffffff3d}
-.showcase-dots{position:absolute;z-index:3;bottom:14px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:7px}
-.showcase-dots button{width:8px;height:8px;border:0;border-radius:99px;padding:0;background:#ffffff79}
-.showcase-dots button.active{width:24px;background:white}
+/* Preços promocionais */
 .old-price{display:block;color:#969bb0;text-decoration:line-through;font-size:12px;font-weight:500;letter-spacing:0;margin-bottom:3px}
-.offer-pill{position:absolute;right:12px;bottom:12px;z-index:2;background:#e94265;color:white;padding:6px 9px;border-radius:8px;font-size:12px;font-weight:800}
+.offer-pill{position:absolute;right:12px;bottom:12px;z-index:2;background:#111111;color:#f1c75b;padding:6px 9px;border-radius:8px;font-size:12px;font-weight:800}
 .detail-old-price{display:block;color:#8c93a7;font-size:15px;font-weight:500;text-decoration:line-through;margin-bottom:6px}
-.detail-offer-badge{display:inline-block;vertical-align:middle;border-radius:6px;background:#ffedf1;color:#c83956;padding:5px 8px;font-size:13px;font-weight:800}
+.detail-offer-badge{display:inline-block;vertical-align:middle;border-radius:6px;background:#111111;color:#f1c75b;padding:5px 8px;font-size:13px;font-weight:800}
 .offer-input-label{margin-bottom:3px}
-.admin-offer-status{display:inline-block;background:#fce3ed;color:#a93056;padding:2px 6px;border-radius:5px;font-size:10px;font-weight:800}
-@media(max-width:720px){
-  .store-showcase{min-height:320px}
-  .store-showcase-text{padding:36px 20px 42px;max-width:78%}
-  .store-showcase-text h1{font-size:clamp(26px,6vw,38px)}
-  .store-showcase-text p{font-size:12px}
-  .store-showcase-art{width:52%;opacity:.42;right:-5%}
-  .showcase-prices strong{font-size:22px}
-  .showcase-arrow{width:26px;height:35px;font-size:24px}
-  .showcase-prev{left:3px}.showcase-next{right:3px}
-}
+.admin-offer-status{display:inline-block;background:#111111;color:#f1c75b;padding:2px 6px;border-radius:5px;font-size:10px;font-weight:800}
+
+/* Filtro de ofertas: identidade preto e dourado */
+.filters button.offer-filter{background:#141414;color:#f1c75b;border-color:#b68b36;font-weight:800}
+.filters button.offer-filter:hover{background:#2b2518;color:#ffe29a;border-color:#e0b956}
+.filters button.offer-filter.active{background:#090909;color:#ffd76e;border-color:#e2b853;box-shadow:0 0 0 2px #e2b85322}
