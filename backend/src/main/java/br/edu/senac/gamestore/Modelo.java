@@ -32,6 +32,8 @@ class Produto {
     @Column(nullable=false, precision=12, scale=2) public BigDecimal preco;
     @Column(nullable=false) public int estoque;
     @Column(nullable=false) public boolean ativo = true;
+    // Excluídos ficam ocultos do catálogo e da administração; pedidos antigos preservam seu histórico.
+    @Column(columnDefinition="BOOLEAN DEFAULT FALSE") public boolean excluido = false;
 }
 @Entity @Table(name="pedidos")
 class Pedido {
