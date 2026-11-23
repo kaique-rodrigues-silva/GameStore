@@ -28,11 +28,11 @@ class AdminController {
     public Map<String,Object> resumo(@RequestHeader(value="Authorization",required=false) String token){
         admin(token);
         BigDecimal faturamento=pedidos.findAll().stream().map(p->p.total).reduce(BigDecimal.ZERO,BigDecimal::add);
-        return Map.of("produtos",produtos.findByAtivoTrueOrderByIdAsc().size(),"clientes",contas.findAll().stream().filter(c->"CLIENTE".equals(c.perfil)&&c.ativo).count(),
+        return Map.of("produtos",produtos.findByAtivoTrueAndExcluidoFalseOrderByIdAsc().size(),"clientes",contas.findAll().stream().filter(c->"CLIENTE".equals(c.perfil)&&c.ativo).count(),
             "pedidos",pedidos.count(),"faturamento",faturamento);
     }
     @GetMapping("/produtos")
-    public List<Produto> listarProdutos(@RequestHeader(value="Authorization",required=false) String token){admin(token);return produtos.findAll();}
+    public List<Produto> listarProdutos(@RequestHeader(value="Authorization",required=false) String token){admin(token);return produtos.findByExcluidoFalseOrderByIdAsc();}
     record DadosProduto(String nome,String categoria,String plataforma,String condicao,String descricao,String imagem,BigDecimal preco,Integer estoque) { }
     private void atualizarProduto(Produto p,DadosProduto d){
         if(d==null||d.nome()==null||d.nome().isBlank()||d.preco()==null||d.preco().signum()<0||d.estoque()==null||d.estoque()<0)
@@ -48,14 +48,39 @@ class AdminController {
     @PutMapping("/produtos/{id}")
     public Produto alterarProduto(@RequestHeader(value="Authorization",required=false) String token,@PathVariable Long id,@RequestBody DadosProduto d){
         admin(token);Produto p=produtos.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado"));
+        if(p.excluido)throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado");
         atualizarProduto(p,d);return produtos.save(p);
     }
-    @DeleteMapping("/produtos/{id}") @Transactional
+    @PutMapping("/produtos/{id}/situacao")
+    @Transactional
+    public Map<String,String> situacaoProduto(@RequestHeader(value="Authorization",required=false) String token,
+                                                @PathVariable Long id,@RequestBody SituacaoProduto dados){
+        admin(token);
+        Produto produto=produtos.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado"));
+        if(produto.excluido)throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado");
+        if(dados==null || dados.ativo()==null)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Informe a situação do produto");
+        produto.ativo=dados.ativo();produtos.save(produto);
+        return Map.of("mensagem",produto.ativo?"Produto reativado":"Produto arquivado");
+    }
+    record SituacaoProduto(Boolean ativo) { }
+
+    @DeleteMapping("/produtos/{id}")
+    @Transactional
     public Map<String,String> excluirProduto(@RequestHeader(value="Authorization",required=false) String token,@PathVariable Long id){
-        admin(token);Produto p=produtos.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado"));
-        if(itens.existsByProdutoId(id)) {p.ativo=false;produtos.save(p);return Map.of("mensagem","Produto arquivado, histórico preservado");}
+        admin(token);
+        Produto p=produtos.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado"));
+        if(p.excluido)throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado");
+        // Se houve vendas, preserva o registro internamente para que pedidos anteriores continuem íntegros.
+        // Produtos nunca vendidos podem ser eliminados fisicamente do banco.
         favoritos.deleteByProdutoId(id);
-        produtos.delete(p);return Map.of("mensagem","Produto excluído");
+        if(itens.existsByProdutoId(id)){
+            p.ativo=false;
+            p.excluido=true;
+            produtos.save(p);
+            return Map.of("mensagem","Produto excluído da administração e loja; histórico de pedidos preservado");
+        }
+        produtos.delete(p);
+        return Map.of("mensagem","Produto excluído definitivamente");
     }
     @GetMapping("/usuarios")
     public List<Map<String,Object>> usuarios(@RequestHeader(value="Authorization",required=false) String token){
