@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService, Linha } from './api.service';
+import { ApiService, Linha, Produto } from './api.service';
 
 interface EnderecoViaCep {
   erro?: boolean;
@@ -21,7 +21,7 @@ interface EnderecoViaCep {
     <div><article class="cart-line" *ngFor="let item of itens">
       <div><strong>{{item.produto.nome}}</strong><div class="meta">{{item.produto.plataforma}}</div></div>
       <div class="qty"><button type="button" (click)="mudar(item,-1)">−</button><span>{{item.quantidade}}</span><button type="button" (click)="mudar(item,1)">+</button></div>
-      <strong>{{item.produto.preco * item.quantidade | currency:'BRL'}}</strong>
+      <strong>{{precoAtual(item.produto) * item.quantidade | currency:'BRL'}}</strong>
       <button class="link" (click)="remover.emit(item.produto.id)">Remover</button>
     </article></div>
     <div class="panel"><h3>Resumo do pedido</h3><div class="between">Total <strong>{{total | currency:'BRL'}}</strong></div>
@@ -85,7 +85,8 @@ export class CarrinhoComponent {
   private consultaAtual=0;
 
   constructor(public api:ApiService) { }
-  get total(){return this.itens.reduce((s,i)=>s+i.produto.preco*i.quantidade,0);}
+  precoAtual(p:Produto){return p.precoPromocional!=null && p.precoPromocional>=0 && p.precoPromocional<p.preco?p.precoPromocional:p.preco;}
+  get total(){return this.itens.reduce((s,i)=>s+this.precoAtual(i.produto)*i.quantidade,0);}
   mudar(item:Linha,delta:number){this.atualizar.emit({id:item.produto.id,delta});}
 
   somenteNumeros(valor:string){return (valor||'').replace(/\D/g,'');}
