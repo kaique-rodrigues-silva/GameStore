@@ -49,7 +49,11 @@ import { ApiService, Produto, Pedido } from './api.service';
           <input name="marcaAcessorio" [(ngModel)]="produtoForm.plataforma" placeholder="Ex.: Sony, Logitech, HyperX" maxlength="120"/>
         </label>
         <label>Condição <select name="condicao" [(ngModel)]="produtoForm.condicao"><option value="NOVO">Novo</option><option value="USADO">Seminovo</option></select></label>
-        <label>Preço (R$) <input required name="preco" type="number" min="0" step="0.01" [(ngModel)]="produtoForm.preco"/></label>
+        <label>Preço normal (R$) <input required name="preco" type="number" min="0" step="0.01" [(ngModel)]="produtoForm.preco"/></label>
+        <label class="offer-input-label">Preço promocional (R$) · opcional
+          <input name="precoPromocional" type="number" min="0" step="0.01" [ngModel]="produtoForm.precoPromocional" (ngModelChange)="produtoForm.precoPromocional=$event===''?null:$event" placeholder="Deixe em branco se não estiver em promoção"/>
+        </label>
+        <p class="muted">Para criar uma oferta, informe um valor menor que o preço normal. Apague o valor para encerrar a promoção.</p>
         <label>Estoque <input required name="estoque" type="number" min="0" step="1" [(ngModel)]="produtoForm.estoque"/></label>
         <label>URL da imagem (opcional)
           <textarea class="admin-image-url" name="imagem" [(ngModel)]="produtoForm.imagem" rows="3" placeholder="Cole a URL da imagem"></textarea>
@@ -64,7 +68,7 @@ import { ApiService, Produto, Pedido } from './api.service';
     <div class="panel"><h3>Produtos cadastrados</h3><div class="admin-row product-admin-row" *ngFor="let p of produtos">
       <div class="admin-product-info">
         <strong>{{p.nome}}</strong>
-        <div class="meta">{{p.plataforma}} · {{p.preco | currency:'BRL'}} · Estoque: {{p.estoque}} · {{p.ativo?'Ativo':'Arquivado'}}</div>
+        <div class="meta">{{p.plataforma}} · {{p.precoEfetivo??p.preco | currency:'BRL'}} <span *ngIf="p.precoPromocional!=null && p.precoPromocional<p.preco" class="admin-offer-status">Em oferta</span> · Estoque: {{p.estoque}} · {{p.ativo?'Ativo':'Arquivado'}}</div>
       </div>
       <div class="admin-product-actions">
         <button type="button" class="admin-action edit" (click)="editarProduto(p)" [disabled]="processandoProduto===p.id">Editar</button>
@@ -134,7 +138,7 @@ export class AdminComponent implements OnInit {
   produtoForm=this.novoProduto();usuarioForm=this.novoUsuario();
   ufs=['SP','RJ','MG','ES','PR','SC','RS','BA','PE','CE','DF','GO','PA','AM','AC','AL','AP','MA','MT','MS','PB','PI','RN','RO','RR','SE','TO'];
   constructor(public api:ApiService) { }
-  novoProduto(){return {nome:'',categoria:'JOGO',plataforma:'',condicao:'NOVO',preco:0,estoque:1,imagem:'',descricao:''};}
+  novoProduto(){return {nome:'',categoria:'JOGO',plataforma:'',condicao:'NOVO',preco:0,precoPromocional:null as number|null,estoque:1,imagem:'',descricao:''};}
   trocarCategoria(categoria:string){
     this.produtoForm.plataforma='';
     this.produtoForm.categoria=categoria;
@@ -151,7 +155,7 @@ export class AdminComponent implements OnInit {
   }
   limparProduto(){this.produtoId=null;this.produtoForm=this.novoProduto();}
   editarProduto(p:Produto){this.produtoId=p.id;this.produtoForm={nome:p.nome,categoria:p.categoria,plataforma:p.plataforma,condicao:p.condicao,
-    preco:p.preco,estoque:p.estoque,imagem:p.imagem||'',descricao:p.descricao||''};}
+    preco:p.preco,precoPromocional:p.precoPromocional??null,estoque:p.estoque,imagem:p.imagem||'',descricao:p.descricao||''};}
   async salvarProduto(){
     this.aviso='';this.erro='';
     try {
