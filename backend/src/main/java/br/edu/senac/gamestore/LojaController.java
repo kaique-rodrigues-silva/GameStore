@@ -21,12 +21,12 @@ class LojaController {
         this.produtos=produtos;this.auth=auth;this.compras=compras;this.favoritos=favoritos;
     }
     @GetMapping("/produtos")
-    public List<Produto> produtos(){return produtos.findByAtivoTrueOrderByIdAsc();}
+    public List<Produto> produtos(){return produtos.findByAtivoTrueAndExcluidoFalseOrderByIdAsc();}
     @GetMapping("/favoritos")
     public List<Long> favoritos(@RequestHeader(value="Authorization",required=false) String token){
         Long contaId=auth.cliente(token).id;
         return favoritos.findByContaIdOrderByIdDesc(contaId).stream().map(f->f.produtoId)
-            .filter(id->produtos.findById(id).map(p->p.ativo).orElse(false)).toList();
+            .filter(id->produtos.findById(id).map(p->p.ativo && !p.excluido).orElse(false)).toList();
     }
     @PostMapping("/favoritos/{produtoId}")
     @Transactional
@@ -34,7 +34,7 @@ class LojaController {
         Long contaId=auth.cliente(token).id;
         Produto produto=produtos.findById(produtoId).orElseThrow(
             ()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto não encontrado"));
-        if(!produto.ativo)throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto indisponível");
+        if(!produto.ativo || produto.excluido)throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Produto indisponível");
         if(favoritos.findByContaIdAndProdutoId(contaId,produtoId).isEmpty()){
             Favorito f=new Favorito();f.contaId=contaId;f.produtoId=produtoId;favoritos.save(f);
         }
@@ -87,7 +87,7 @@ class CompraService {
         BigDecimal total=BigDecimal.ZERO;
         for(var entrada:quantidades.entrySet()){
             Produto p=produtos.findById(entrada.getKey()).orElseThrow(()->new ResponseStatusException(HttpStatus.BAD_REQUEST,"Produto não encontrado"));
-            if(!p.ativo || entrada.getValue()>p.estoque)
+            if(!p.ativo || p.excluido || entrada.getValue()>p.estoque)
                 throw new ResponseStatusException(HttpStatus.CONFLICT,"Estoque insuficiente para: "+p.nome);
             selecionados.put(p,entrada.getValue());
             total=total.add(p.preco.multiply(BigDecimal.valueOf(entrada.getValue())));
