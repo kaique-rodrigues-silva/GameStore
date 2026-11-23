@@ -171,3 +171,12 @@
 .filters button.offer-filter{background:#141414;color:#f1c75b;border-color:#b68b36;font-weight:800}
 .filters button.offer-filter:hover{background:#2b2518;color:#ffe29a;border-color:#e0b956}
 .filters button.offer-filter.active{background:#090909;color:#ffd76e;border-color:#e2b853;box-shadow:0 0 0 2px #e2b85322}
+
+
+/* Identidade GameStore: sacola de compras roxa com controle branco */
+.logo-bag{display:inline-flex;align-items:center;justify-content:center;width:43px;height:49px;flex:0 0 43px;margin-right:11px}
+.logo-bag-icon{width:42px;height:47px;display:block;overflow:visible}
+.logo-word{display:inline-flex;white-space:nowrap;align-items:baseline}
+.logo-word>span{color:#b28cff}
+.logo .logo-word{color:#fff}
+@media(max-width:560px){.logo-bag{width:37px;height:43px;flex-basis:37px;margin-right:7px}.logo-bag-icon{width:36px;height:41px}.logo{font-size:18px}}
