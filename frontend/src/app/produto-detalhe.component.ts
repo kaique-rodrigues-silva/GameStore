@@ -32,7 +32,11 @@ import { Produto } from './api.service';
       </div>
     </div>
     <aside class="detail-buy">
-      <div class="detail-price">{{p.preco | currency:'BRL'}}</div>
+      <div class="detail-price">
+        <span class="detail-old-price" *ngIf="emOferta(p)">{{p.preco | currency:'BRL'}}</span>
+        {{precoAtual(p) | currency:'BRL'}}
+        <span *ngIf="emOferta(p)" class="detail-offer-badge">-{{desconto(p)}}%</span>
+      </div>
       <div class="detail-stock" [class.unavailable]="p.estoque<1">{{p.estoque>0?'Em estoque':'Indisponível'}}</div>
       <p class="detail-stock-note" *ngIf="p.estoque>0">{{p.estoque}} {{p.estoque===1?'unidade disponível':'unidades disponíveis'}}</p>
       <div class="detail-quantity" *ngIf="p.estoque>0">
@@ -57,7 +61,7 @@ import { Produto } from './api.service';
         <a [href]="'#/produto/'+item.id" (click)="verProduto.emit(item)">
           <div class="related-image"><img [src]="item.imagem || imagemPadrao(item)" [alt]="item.nome" (error)="falhaRelacionado($event,item)"/></div>
           <h3>{{item.nome}}</h3>
-          <p>{{item.preco | currency:'BRL'}}</p>
+          <p><span class="old-price" *ngIf="emOferta(item)">{{item.preco | currency:'BRL'}}</span>{{precoAtual(item) | currency:'BRL'}}</p>
         </a>
       </article>
     </div>
@@ -79,6 +83,10 @@ export class ProdutoDetalheComponent {
   @Output() voltar=new EventEmitter<void>();
   @Output() adicionar=new EventEmitter<{produto:Produto;quantidade:number}>();
   quantidade=1;imagemFalhou=false;adicionado=false;
+  precoAtual(p:Produto){return p.precoPromocional!=null && p.precoPromocional>=0 && p.precoPromocional<p.preco?p.precoPromocional:p.preco;}
+  emOferta(p:Produto){return p.precoPromocional!=null && p.precoPromocional>=0 && p.precoPromocional<p.preco;}
+  desconto(p:Produto){return p.preco>0?Math.round((1-this.precoAtual(p)/p.preco)*100):0;}
+
   get relacionados():Produto[]{
     const p=this.produto;
     if(!p)return [];
