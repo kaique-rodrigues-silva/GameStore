@@ -90,14 +90,14 @@ class CompraService {
             if(!p.ativo || p.excluido || entrada.getValue()>p.estoque)
                 throw new ResponseStatusException(HttpStatus.CONFLICT,"Estoque insuficiente para: "+p.nome);
             selecionados.put(p,entrada.getValue());
-            total=total.add(p.preco.multiply(BigDecimal.valueOf(entrada.getValue())));
+            total=total.add(p.getPrecoEfetivo().multiply(BigDecimal.valueOf(entrada.getValue())));
         }
         Pedido pedido=new Pedido();pedido.contaId=cliente.id;pedido.pagamento=solicitacao.pagamento();
         pedido.endereco=solicitacao.endereco().trim();pedido.total=total;pedidos.save(pedido);
         for(var entry:selecionados.entrySet()){
             Produto p=entry.getKey();int qtd=entry.getValue();p.estoque-=qtd;produtos.save(p);
             ItemPedido ip=new ItemPedido();ip.pedidoId=pedido.id;ip.produtoId=p.id;ip.nome=p.nome;
-            ip.preco=p.preco;ip.quantidade=qtd;itens.save(ip);
+            ip.preco=p.getPrecoEfetivo();ip.quantidade=qtd;itens.save(ip);
         }
         return Map.of("pedidoId",pedido.id,"total",total,"pagamento",pedido.pagamento,"mensagem","Pedido de demonstração confirmado");
     }
