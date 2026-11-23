@@ -61,10 +61,18 @@ import { ApiService, Produto, Pedido } from './api.service';
         <button type="button" class="link" (click)="limparProduto()" *ngIf="produtoId">Cancelar edição</button>
       </form>
     </div>
-    <div class="panel"><h3>Produtos cadastrados</h3><div class="admin-row" *ngFor="let p of produtos">
-      <div><strong>{{p.nome}}</strong><div class="meta">{{p.plataforma}} · {{p.preco | currency:'BRL'}} · Estoque: {{p.estoque}} · {{p.ativo?'Ativo':'Arquivado'}}</div></div>
-      <div><button class="link" (click)="editarProduto(p)">Editar</button> <button class="link danger" (click)="excluirProduto(p)">Excluir</button></div>
-    </div></div>
+    <div class="panel"><h3>Produtos cadastrados</h3><div class="admin-row product-admin-row" *ngFor="let p of produtos">
+      <div class="admin-product-info">
+        <strong>{{p.nome}}</strong>
+        <div class="meta">{{p.plataforma}} · {{p.preco | currency:'BRL'}} · Estoque: {{p.estoque}} · {{p.ativo?'Ativo':'Arquivado'}}</div>
+      </div>
+      <div class="admin-product-actions">
+        <button type="button" class="admin-action edit" (click)="editarProduto(p)" [disabled]="processandoProduto===p.id">Editar</button>
+        <button type="button" class="admin-action archive" (click)="alterarArquivo(p)" [disabled]="processandoProduto===p.id">{{p.ativo?'Arquivar':'Reativar'}}</button>
+        <button type="button" class="admin-action delete" (click)="excluirProduto(p)" [disabled]="processandoProduto===p.id">Excluir</button>
+      </div>
+    </div>
+    <p class="muted" *ngIf="!produtos.length">Nenhum produto cadastrado.</p></div>
   </div>
   <div *ngIf="aba==='usuarios'" class="admin-grid">
     <div class="panel"><h3>Cadastrar usuário pelo administrador</h3>
@@ -111,6 +119,7 @@ import { ApiService, Produto, Pedido } from './api.service';
 export class AdminComponent implements OnInit {
   aba='resumo';erro='';aviso='';
   excluindoPedido=false;
+  processandoProduto:number|null=null;
   resumo:{produtos?:number;clientes?:number;pedidos?:number;faturamento?:number}={};
   produtos:Produto[]=[];pedidos:(Pedido&{clienteId:number})[]=[];
   usuarios:{id:number;nome:string;email:string;perfil:string;tipo:string;ativo:boolean}[]=[];
@@ -151,10 +160,30 @@ export class AdminComponent implements OnInit {
       this.aviso='Produto salvo.';this.limparProduto();await this.carregar();
     }catch(e){this.aviso='';this.erro=(e as Error).message;}
   }
+  async alterarArquivo(p:Produto){
+    if(this.processandoProduto!==null)return;
+    const estavaAtivo=p.ativo;
+    const acao=estavaAtivo?'arquivar':'reativar';
+    if(!confirm(`Deseja ${acao} "${p.nome}"? ${p.ativo?'Ele deixará de aparecer na loja, mas continuará disponível no painel administrativo.':'Ele voltará a aparecer na loja.'}`))return;
+    this.processandoProduto=p.id;this.erro='';this.aviso='';
+    try{
+      await this.api.put(`/admin/produtos/${p.id}/situacao`,{ativo:!p.ativo});
+      await this.carregar();
+      this.aviso=estavaAtivo?'Produto arquivado.':'Produto reativado.';
+    }catch(e){this.erro=(e as Error).message;}
+    finally{this.processandoProduto=null;}
+  }
   async excluirProduto(p:Produto){
-    if(!confirm(`Excluir ou arquivar ${p.nome}?`))return;
-    try{await this.api.del(`/admin/produtos/${p.id}`);this.aviso='Produto atualizado.';await this.carregar();}
-    catch(e){this.erro=(e as Error).message;}
+    if(this.processandoProduto!==null)return;
+    if(!confirm(`EXCLUIR "${p.nome}"?\\n\\nO produto desaparecerá da loja e da lista administrativa. A ação não poderá ser desfeita. O histórico das compras anteriores será preservado.`))return;
+    this.processandoProduto=p.id;this.erro='';this.aviso='';
+    try{
+      await this.api.del(`/admin/produtos/${p.id}`);
+      if(this.produtoId===p.id)this.limparProduto();
+      await this.carregar();
+      this.aviso='Produto excluído. Ele não aparecerá mais na lista.';
+    }catch(e){this.erro=(e as Error).message;}
+    finally{this.processandoProduto=null;}
   }
   async salvarUsuario(){try{
       await this.api.post('/admin/usuarios',this.usuarioForm);this.aviso='Usuário cadastrado.';this.erro='';
