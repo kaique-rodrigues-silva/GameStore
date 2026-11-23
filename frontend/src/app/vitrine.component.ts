@@ -4,37 +4,19 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Produto } from './api.service';
 
 @Component({selector:'app-vitrine',standalone:true,imports:[CommonModule,FormsModule],template:`
-<section class="hero store-showcase" aria-label="Destaques da GameStore">
-  <ng-container *ngIf="slideAtual as slide">
-    <div class="hero-text store-showcase-text">
-      <div class="eyebrow">{{slide.oferta?'OFERTA ESPECIAL':'EXPLORE A GAMESTORE'}}</div>
-      <h1>{{slide.titulo}}</h1>
-      <p>{{slide.descricao}}</p>
-      <div *ngIf="slide.produto as destaque" class="showcase-prices">
-        <span class="showcase-old-price">{{destaque.preco | currency:'BRL'}}</span>
-        <strong>{{precoAtual(destaque) | currency:'BRL'}}</strong>
-        <span class="showcase-discount">-{{desconto(destaque)}}%</span>
-      </div>
-      <a *ngIf="!slide.produto" href="#catalogo" class="button button-light" (click)="categoria=slide.categoria||'TODOS'">Ver produtos</a>
-      <a *ngIf="slide.produto as destaque" [href]="'#/produto/'+destaque.id" class="button button-light" (click)="verDetalhes.emit(destaque)">Ver oferta</a>
-    </div>
-    <div class="store-showcase-art" aria-hidden="true">
-      <div class="showcase-orbit"></div>
-      <img [src]="slide.imagem" [alt]="''" (error)="usarImagemPadraoSlide($event,slide)"/>
-    </div>
-  </ng-container>
-  <button type="button" class="showcase-arrow showcase-prev" (click)="mudarSlide(-1)" aria-label="Banner anterior">‹</button>
-  <button type="button" class="showcase-arrow showcase-next" (click)="mudarSlide(1)" aria-label="Próximo banner">›</button>
-  <div class="showcase-dots" aria-label="Selecionar banner">
-    <button type="button" *ngFor="let item of slides;let i=index" [class.active]="i===indiceSlide" (click)="indiceSlide=i" [attr.aria-label]="'Mostrar banner '+(i+1)"></button>
-  </div>
+<section class="hero">
+  <div class="hero-text"><div class="eyebrow">GAMES, CONSOLES E ACESSÓRIOS</div>
+    <h1>Sua próxima aventura começa aqui.</h1>
+    <p>Encontre os jogos e equipamentos que fazem parte da sua história.</p>
+    <a href="#catalogo" class="button button-light">Ver produtos</a>
+  </div><div class="hero-art" aria-hidden="true"><div class="circle-a"></div><div class="circle-b"></div><div class="game-symbol">GS</div></div>
 </section>
 <section id="catalogo" class="section">
   <div class="section-top"><div><div class="eyebrow purple">ESCOLHA SEU JOGO</div><h2>Nosso catálogo</h2></div>
     <label class="search-label">Pesquisar <input [(ngModel)]="pesquisa" placeholder="Jogo, console ou plataforma..."/></label>
   </div>
   <nav class="filters" aria-label="Filtrar produtos">
-    <button *ngFor="let filtro of filtros" type="button" [class.active]="categoria===filtro.v" (click)="categoria=filtro.v">{{filtro.label}}</button>
+    <button *ngFor="let filtro of filtros" type="button" [class.active]="categoria===filtro.v" [class.offer-filter]="filtro.v==='OFERTA'" (click)="categoria=filtro.v">{{filtro.label}}</button>
   </nav>
   <div class="store-toolbar">
     <div class="store-filter-control">
@@ -116,30 +98,9 @@ export class VitrineComponent {
   @Output() adicionar=new EventEmitter<Produto>();
   @Output() verDetalhes=new EventEmitter<Produto>();
   @Output() favoritar=new EventEmitter<Produto>();
-  indiceSlide=0;
   precoAtual(p:Produto){return p.precoPromocional!=null && p.precoPromocional>=0 && p.precoPromocional<p.preco?p.precoPromocional:p.preco;}
   emOferta(p:Produto){return p.precoPromocional!=null && p.precoPromocional>=0 && p.precoPromocional<p.preco;}
   desconto(p:Produto){return p.preco>0?Math.round((1-this.precoAtual(p)/p.preco)*100):0;}
-  get slides():{titulo:string;descricao:string;imagem:string;categoria?:string;produto?:Produto;oferta?:boolean}[]{
-    const categorias=[
-      {titulo:'Seu próximo jogo está aqui.',descricao:'Explore títulos para PlayStation, Xbox, Nintendo e PC.',imagem:'/assets/placeholder-jogo.svg',categoria:'JOGO'},
-      {titulo:'Consoles para toda aventura.',descricao:'Encontre o videogame perfeito para sua próxima jornada.',imagem:'/assets/placeholder-console.svg',categoria:'CONSOLE'},
-      {titulo:'Complete seu setup.',descricao:'Acessórios e equipamentos para deixar cada partida melhor.',imagem:'/assets/placeholder-acessorio.svg',categoria:'ACESSORIO'}
-    ];
-    const promocoes=this.produtos.filter(p=>this.emOferta(p) && p.estoque>0).slice(0,5).map(p=>({
-      titulo:p.nome,descricao:'Aproveite este produto em promoção por tempo indeterminado.',
-      imagem:p.imagem||this.imagemPadrao(p),produto:p,oferta:true
-    }));
-    return [...promocoes,...categorias];
-  }
-  get slideAtual(){const lista=this.slides;return lista[this.indiceSlide%lista.length]||lista[0];}
-  mudarSlide(delta:number){const tamanho=this.slides.length;this.indiceSlide=(this.indiceSlide+delta+tamanho)%tamanho;}
-  usarImagemPadraoSlide(event:Event,slide:{produto?:Produto;categoria?:string}){
-    const img=event.target as HTMLImageElement;
-    const categoria=slide.produto?.categoria||slide.categoria||'JOGO';
-    const padrao='/assets/placeholder-'+(categoria==='CONSOLE'?'console':categoria==='ACESSORIO'?'acessorio':'jogo')+'.svg';
-    if(!img.src.endsWith(padrao))img.src=padrao;
-  }
   pesquisa='';categoria='TODOS';falhas:Record<number,boolean>={};
   plataformaSelecionada='';marcaSelecionada='';condicaoSelecionada='';ordenacao='';
   filtroAberto=false;ordemAberta=false;
@@ -154,7 +115,7 @@ export class VitrineComponent {
   definirOrdenacao(valor:string){this.ordenacao=valor;this.ordemAberta=false;}
   nomeCategoria(p:Produto){return p.categoria==='CONSOLE'?'Console':p.categoria==='ACESSORIO'?'Acessório':'Jogo';}
   imagemPadrao(p:Produto){return '/assets/placeholder-'+(p.categoria==='CONSOLE'?'console':p.categoria==='ACESSORIO'?'acessorio':'jogo')+'.svg';}
-  filtros=[{v:'TODOS',label:'Todos'},{v:'JOGO',label:'Jogos'},{v:'CONSOLE',label:'Consoles'},{v:'ACESSORIO',label:'Acessórios'},{v:'USADO',label:'Seminovos'}];
+  filtros=[{v:'TODOS',label:'Todos'},{v:'JOGO',label:'Jogos'},{v:'CONSOLE',label:'Consoles'},{v:'ACESSORIO',label:'Acessórios'},{v:'USADO',label:'Seminovos'},{v:'OFERTA',label:'Em oferta'}];
 
   // O campo "plataforma" guarda a plataforma dos jogos e a marca de consoles/acessórios.
   // Gera os filtros automaticamente a partir dos produtos existentes.
@@ -191,7 +152,7 @@ export class VitrineComponent {
   get filtrados():Produto[]{
     const busca=this.pesquisa.trim().toLocaleLowerCase('pt-BR');
     const lista=this.produtos.filter(p=>
-      (this.categoria==='TODOS'||(this.categoria==='USADO'?p.condicao==='USADO':p.categoria===this.categoria))
+      (this.categoria==='TODOS'||(this.categoria==='USADO'?p.condicao==='USADO':this.categoria==='OFERTA'?this.emOferta(p):p.categoria===this.categoria))
       &&(!this.condicaoSelecionada||p.condicao===this.condicaoSelecionada)
       &&(!this.plataformaSelecionada||(p.categoria==='JOGO'&&this.corresponde(p.plataforma,this.plataformaSelecionada)))
       &&(!this.marcaSelecionada||((p.categoria==='CONSOLE'||p.categoria==='ACESSORIO')&&this.corresponde(p.plataforma,this.marcaSelecionada)))
@@ -199,8 +160,8 @@ export class VitrineComponent {
     );
     if(this.ordenacao==='AZ')return lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
     if(this.ordenacao==='ZA')return lista.sort((a,b)=>b.nome.localeCompare(a.nome,'pt-BR',{sensitivity:'base'}));
-    if(this.ordenacao==='PRECO_ASC')return lista.sort((a,b)=>a.preco-b.preco);
-    if(this.ordenacao==='PRECO_DESC')return lista.sort((a,b)=>b.preco-a.preco);
+    if(this.ordenacao==='PRECO_ASC')return lista.sort((a,b)=>this.precoAtual(a)-this.precoAtual(b));
+    if(this.ordenacao==='PRECO_DESC')return lista.sort((a,b)=>this.precoAtual(b)-this.precoAtual(a));
     return lista;
   }
 }
