@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 export interface Produto {
   id:number;nome:string;categoria:string;plataforma:string;condicao:string;
-  descricao:string;imagem:string;preco:number;estoque:number;ativo:boolean;
+  descricao:string;imagem:string;preco:number;precoPromocional:number|null;precoEfetivo:number;estoque:number;ativo:boolean;
 }
 export interface Usuario { id:number;nome:string;email:string;perfil:'ADMIN'|'CLIENTE';tipo:string; }
 export interface Linha {produto:Produto;quantidade:number;}
