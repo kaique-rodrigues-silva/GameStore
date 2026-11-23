@@ -33,13 +33,16 @@ class AdminController {
     }
     @GetMapping("/produtos")
     public List<Produto> listarProdutos(@RequestHeader(value="Authorization",required=false) String token){admin(token);return produtos.findByExcluidoFalseOrderByIdAsc();}
-    record DadosProduto(String nome,String categoria,String plataforma,String condicao,String descricao,String imagem,BigDecimal preco,Integer estoque) { }
+    record DadosProduto(String nome,String categoria,String plataforma,String condicao,String descricao,String imagem,BigDecimal preco,BigDecimal precoPromocional,Integer estoque) { }
     private void atualizarProduto(Produto p,DadosProduto d){
         if(d==null||d.nome()==null||d.nome().isBlank()||d.preco()==null||d.preco().signum()<0||d.estoque()==null||d.estoque()<0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Informe nome, preço e estoque válidos");
         p.nome=d.nome().trim();p.categoria=d.categoria()==null?"JOGO":d.categoria();
         p.plataforma=d.plataforma()==null?"":d.plataforma();p.condicao=d.condicao()==null?"NOVO":d.condicao();
-        p.descricao=d.descricao();p.imagem=d.imagem();p.preco=d.preco();p.estoque=d.estoque();
+        if(d.precoPromocional()!=null && (d.precoPromocional().signum()<0 || d.precoPromocional().compareTo(d.preco())>=0))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Preço promocional deve ser menor que o preço normal e não pode ser negativo");
+        p.descricao=d.descricao();p.imagem=d.imagem();p.preco=d.preco();
+        p.precoPromocional=d.precoPromocional();p.estoque=d.estoque();
     }
     @PostMapping("/produtos")
     public Produto criarProduto(@RequestHeader(value="Authorization",required=false) String token,@RequestBody DadosProduto d){
