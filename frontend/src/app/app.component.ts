@@ -85,7 +85,7 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
           <div class="meta">{{p.plataforma}} · {{p.categoria==='JOGO'?'Jogo':p.categoria==='CONSOLE'?'Console':'Acessório'}}</div>
           <h3><a [href]="'#/produto/'+p.id" (click)="abrirProduto(p)">{{p.nome}}</a></h3>
           <span class="stock">{{p.estoque>0?'Disponível':'Sem estoque'}}</span>
-          <div class="price">{{p.preco | currency:'BRL'}}</div>
+          <div class="price">{{precoAtual(p) | currency:'BRL'}}</div>
           <button class="button full" type="button" [disabled]="p.estoque<1" (click)="adicionar(p)">Adicionar ao carrinho</button>
         </div>
       </article>
@@ -130,7 +130,7 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
         </div>
         <div class="cart-mini-info">
           <strong>{{item.produto.nome}}</strong>
-          <span>{{item.produto.preco | currency:'BRL'}}</span>
+          <span>{{precoAtual(item.produto) | currency:'BRL'}}</span>
           <div class="cart-mini-actions">
             <button type="button" (click)="atualizarQuantidade({id:item.produto.id,delta:-1})" [disabled]="item.quantidade<=1" [attr.aria-label]="'Diminuir '+item.produto.nome">−</button>
             <span>{{item.quantidade}}</span>
@@ -219,7 +219,8 @@ export class AppComponent implements OnInit {
     }catch(e){this.favoritos=antes;alert((e as Error).message);}
   }
   get quantidade(){return this.carrinho.reduce((s,i)=>s+i.quantidade,0);}
-  get subtotal(){return this.carrinho.reduce((total,item)=>total+item.produto.preco*item.quantidade,0);}
+  precoAtual(p:Produto){return p.precoPromocional!=null && p.precoPromocional>=0 && p.precoPromocional<p.preco?p.precoPromocional:p.preco;}
+  get subtotal(){return this.carrinho.reduce((total,item)=>total+this.precoAtual(item.produto)*item.quantidade,0);}
   imagemPadrao(p:Produto){return '/assets/placeholder-'+(p.categoria==='CONSOLE'?'console':p.categoria==='ACESSORIO'?'acessorio':'jogo')+'.svg';}
   imagemQuebrou(event:Event,p:Produto){
     const img=event.target as HTMLImageElement;
