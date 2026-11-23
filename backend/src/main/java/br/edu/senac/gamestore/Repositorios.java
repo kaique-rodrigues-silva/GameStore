@@ -11,7 +11,8 @@ interface ContaRepo extends JpaRepository<Conta,Long> {
     boolean existsByCnpj(String cnpj);
 }
 interface ProdutoRepo extends JpaRepository<Produto,Long> {
-    List<Produto> findByAtivoTrueOrderByIdAsc();
+    List<Produto> findByAtivoTrueAndExcluidoFalseOrderByIdAsc();
+    List<Produto> findByExcluidoFalseOrderByIdAsc();
 }
 interface PedidoRepo extends JpaRepository<Pedido,Long> {
     List<Pedido> findByContaIdOrderByIdDesc(Long contaId);
