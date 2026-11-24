@@ -7,12 +7,12 @@ A GameStore reúne uma loja virtual para clientes e um painel administrativo par
 ## Funcionalidades
 
 - Catálogo de produtos com jogos, consoles e acessórios
-- Cadastro e login de clientes
+- Cadastro e login de clientes pessoas físicas, com validação matemática de CPF
 - Carrinho de compras e finalização de pedidos demonstrativos
 - Consulta do histórico de pedidos
 - Painel administrativo para gerenciar produtos, usuários e pedidos
 - CRUD de produtos: cadastrar, consultar, atualizar e excluir ou arquivar
-- Controle de estoque e validação de documentos
+- Controle de estoque e validação de CPF (e RG opcional em cadastros administrativos)
 
 > **Projeto acadêmico:** os pagamentos são simulados. Não há cobrança real.
 
@@ -84,4 +84,4 @@ Esta aplicação é somente uma demonstração acadêmica: não aceita pagamento
 
 ## Observações
 
-O banco H2 salva os dados em arquivos locais que não devem ser publicados no GitHub. A validação matemática do RG nesta implementação se aplica a São Paulo; para outros estados, há verificação de formato. O projeto é destinado à demonstração acadêmica, não a operações comerciais reais.
+O banco H2 salva os dados em arquivos locais que não devem ser publicados no GitHub. A validação matemática do RG nesta implementação se aplica a São Paulo; para outros estados, há verificação de formato. Novos cadastros são exclusivos para pessoas físicas, com CPF. Dados de contas empresariais antigas, se existentes no banco, não são apagados automaticamente pela atualização. O projeto é destinado à demonstração acadêmica, não a operações comerciais reais.
