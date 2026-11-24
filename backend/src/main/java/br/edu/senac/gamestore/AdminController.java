@@ -91,10 +91,10 @@ class AdminController {
     }
     private Map<String,Object> usuario(Conta c){
         Map<String,Object> m=new LinkedHashMap<>();m.put("id",c.id);m.put("nome",c.nome);m.put("email",c.email);
-        m.put("perfil",c.perfil);m.put("tipo",c.tipo);m.put("ativo",c.ativo);m.put("cpf",c.cpf);m.put("cnpj",c.cnpj);
-        m.put("rg",c.rg);m.put("ie",c.ie);m.put("rgUf",c.rgUf);m.put("ieUf",c.ieUf);return m;
+        m.put("perfil",c.perfil);m.put("ativo",c.ativo);m.put("cpf",c.cpf);
+        m.put("rg",c.rg);m.put("rgUf",c.rgUf);return m;
     }
-    record DadosUsuario(String nome,String email,String senha,String perfil,String tipo,String cpf,String cnpj,String rg,String rgUf,String ie,String ieUf) { }
+    record DadosUsuario(String nome,String email,String senha,String perfil,String cpf,String rg,String rgUf) { }
     @PostMapping("/usuarios")
     public Map<String,Object> criarUsuario(@RequestHeader(value="Authorization",required=false) String token,@RequestBody DadosUsuario d){
         admin(token);
@@ -104,23 +104,13 @@ class AdminController {
         if(contas.findByEmailIgnoreCase(email).isPresent())throw new ResponseStatusException(HttpStatus.CONFLICT,"E-mail já cadastrado");
         Conta c=new Conta();c.nome=d.nome().trim();c.email=email;c.senhaHash=auth.hash(d.senha());
         c.perfil="ADMIN".equals(d.perfil())?"ADMIN":"CLIENTE";
-        c.tipo="PJ".equals(d.tipo())?"PJ":"PF";
-        if("PJ".equals(c.tipo)) {
-            if(!Documentos.cnpj(d.cnpj()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"CNPJ inválido");
-            c.cnpj=Documentos.alfanumerico(d.cnpj());
-            if(contas.existsByCnpj(c.cnpj))throw new ResponseStatusException(HttpStatus.CONFLICT,"CNPJ já cadastrado");
-            if(d.ie()!=null&&!d.ie().isBlank()){
-                if(!Documentos.ie(d.ie(),d.ieUf()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"IE inválida para UF");
-                c.ie=Documentos.alfanumerico(d.ie());c.ieUf=d.ieUf().toUpperCase(Locale.ROOT);
-            }
-        } else {
-            if(!Documentos.cpf(d.cpf()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"CPF inválido");
-            c.cpf=Documentos.numeros(d.cpf());
-            if(contas.existsByCpf(c.cpf))throw new ResponseStatusException(HttpStatus.CONFLICT,"CPF já cadastrado");
-            if(d.rg()!=null&&!d.rg().isBlank()){
-                if(!Documentos.rg(d.rg(),d.rgUf()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"RG inválido para UF");
-                c.rg=Documentos.alfanumerico(d.rg());c.rgUf=d.rgUf().toUpperCase(Locale.ROOT);
-            }
+        c.tipo="PF";
+        if(!Documentos.cpf(d.cpf()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"CPF inválido");
+        c.cpf=Documentos.numeros(d.cpf());
+        if(contas.existsByCpf(c.cpf))throw new ResponseStatusException(HttpStatus.CONFLICT,"CPF já cadastrado");
+        if(d.rg()!=null&&!d.rg().isBlank()){
+            if(!Documentos.rg(d.rg(),d.rgUf()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"RG inválido para UF");
+            c.rg=Documentos.alfanumerico(d.rg());c.rgUf=d.rgUf().toUpperCase(Locale.ROOT);
         }
         return usuario(contas.save(c));
     }
