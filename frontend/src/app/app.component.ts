@@ -48,33 +48,9 @@ import { ProdutoDetalheComponent } from './produto-detalhe.component';
     <div class="eyebrow purple">NOVO CLIENTE</div><h2>Crie sua conta</h2>
     <div class="alert error" *ngIf="erroAuth">{{erroAuth}}</div>
     <form (ngSubmit)="registrar()">
-      <label>Tipo de cadastro
-        <select name="tipoCadastro" [(ngModel)]="novoTipo">
-          <option value="PF">Pessoa física (CPF)</option>
-          <option value="PJ">Pessoa jurídica (CNPJ)</option>
-        </select>
-      </label>
-      <label>{{novoTipo==='PJ'?'Razão social':'Nome completo'}}
-        <input name="nome" required [(ngModel)]="novoNome" [placeholder]="novoTipo==='PJ'?'Nome da empresa':'Nome completo'"/>
-      </label>
+      <label>Nome completo<input name="nome" required [(ngModel)]="novoNome" placeholder="Nome completo"/></label>
       <label>E-mail<input name="email" type="email" required [(ngModel)]="novoEmail"/></label>
-      <label *ngIf="novoTipo==='PF'">CPF
-        <input name="cpf" required [(ngModel)]="novoCpf" placeholder="000.000.000-00" inputmode="numeric"/>
-      </label>
-      <ng-container *ngIf="novoTipo==='PJ'">
-        <label>CNPJ
-          <input name="cnpj" required [(ngModel)]="novoCnpj" placeholder="00.000.000/0000-00" maxlength="18"/>
-        </label>
-        <label>Inscrição estadual (opcional)
-          <input name="ie" [(ngModel)]="novaIe" placeholder="Informe apenas se possuir IE"/>
-        </label>
-        <label *ngIf="novaIe.trim()">UF da inscrição estadual
-          <select name="ieUf" required [(ngModel)]="novaIeUf">
-            <option value="">Selecione o estado</option>
-            <option *ngFor="let uf of ufs" [value]="uf">{{uf}}</option>
-          </select>
-        </label>
-      </ng-container>
+      <label>CPF<input name="cpf" required [(ngModel)]="novoCpf" placeholder="000.000.000-00" inputmode="numeric"/></label>
       <label>Senha (mínimo 8 caracteres)<input name="senha" type="password" required minlength="8" [(ngModel)]="novaSenha"/></label>
       <button type="submit" class="button full" [disabled]="enviando">{{enviando?'Cadastrando...':'Criar conta'}}</button>
     </form><p class="muted">Já tem uma conta? <button class="link" (click)="ir('login')">Entrar</button></p>
@@ -172,7 +148,6 @@ export class AppComponent implements OnInit {
   favoritos:number[]=[];erroFavoritos='';
   carregando=true;erroProdutos='';erroAuth='';erroPedidos='';enviando=false;
   loginEmail='';loginSenha='';novoNome='';novoEmail='';novoCpf='';novaSenha='';
-  novoTipo:'PF'|'PJ'='PF';novoCnpj='';novaIe='';novaIeUf='';
   ufs=['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
   senhaExclusao='';confirmacaoExclusao='';erroExclusao='';excluindo=false;
   constructor(public api:ApiService) { }
@@ -265,11 +240,7 @@ export class AppComponent implements OnInit {
   compraConcluida(){this.carrinho=[];void this.carregarProdutos();}
   async registrar(){this.erroAuth='';this.enviando=true;try{
       await this.api.post('/auth/registro',{
-        nome:this.novoNome,email:this.novoEmail,senha:this.novaSenha,tipo:this.novoTipo,
-        cpf:this.novoTipo==='PF'?this.novoCpf:null,
-        cnpj:this.novoTipo==='PJ'?this.novoCnpj:null,
-        ie:this.novoTipo==='PJ'?this.novaIe:null,
-        ieUf:this.novoTipo==='PJ'?this.novaIeUf:null
+        nome:this.novoNome,email:this.novoEmail,senha:this.novaSenha,cpf:this.novoCpf
       });
       this.loginEmail=this.novoEmail;this.loginSenha=this.novaSenha;await this.api.entrar(this.loginEmail,this.loginSenha);
       await this.carregarFavoritos();await this.ir(this.carrinho.length?'carrinho':'loja');
