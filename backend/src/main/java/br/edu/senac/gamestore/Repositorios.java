@@ -8,7 +8,6 @@ import java.util.Optional;
 interface ContaRepo extends JpaRepository<Conta,Long> {
     Optional<Conta> findByEmailIgnoreCase(String email);
     boolean existsByCpf(String cpf);
-    boolean existsByCnpj(String cnpj);
 }
 interface ProdutoRepo extends JpaRepository<Produto,Long> {
     List<Produto> findByAtivoTrueAndExcluidoFalseOrderByIdAsc();
