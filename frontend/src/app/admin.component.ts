@@ -86,8 +86,6 @@ import { ApiService, Produto, Pedido } from './api.service';
         <label>Senha (mínimo 8 caracteres) <input name="uSenha" required type="password" [(ngModel)]="usuarioForm.senha"/></label>
         <label>Perfil <select name="uPerfil" [(ngModel)]="usuarioForm.perfil"><option value="CLIENTE">Cliente</option><option value="ADMIN">Administrador</option></select></label>
         <label>CPF <input name="uCpf" required [(ngModel)]="usuarioForm.cpf"/></label>
-        <label>RG (opcional) <input name="uRg" [(ngModel)]="usuarioForm.rg"/></label>
-        <label>UF do RG <select name="uRgUf" [(ngModel)]="usuarioForm.rgUf"><option *ngFor="let uf of ufs" [value]="uf">{{uf}}</option></select></label>
         <button class="button full" type="submit">Cadastrar usuário</button>
       </form>
     </div>
@@ -128,14 +126,13 @@ export class AdminComponent implements OnInit {
   irParaProduto(p:Produto){this.aba='produtos';this.editarProduto(p);window.scrollTo(0,0);}
   produtoId:number|null=null;
   produtoForm=this.novoProduto();usuarioForm=this.novoUsuario();
-  ufs=['SP','RJ','MG','ES','PR','SC','RS','BA','PE','CE','DF','GO','PA','AM','AC','AL','AP','MA','MT','MS','PB','PI','RN','RO','RR','SE','TO'];
   constructor(public api:ApiService) { }
   novoProduto(){return {nome:'',categoria:'JOGO',plataforma:'',condicao:'NOVO',preco:0,precoPromocional:null as number|null,estoque:1,imagem:'',descricao:''};}
   trocarCategoria(categoria:string){
     this.produtoForm.plataforma='';
     this.produtoForm.categoria=categoria;
   }
-  novoUsuario(){return {nome:'',email:'',senha:'',perfil:'CLIENTE',cpf:'',rg:'',rgUf:'SP'};}
+  novoUsuario(){return {nome:'',email:'',senha:'',perfil:'CLIENTE',cpf:''};}
   ngOnInit(){void this.carregar();}
   async carregar(){
     this.erro='';try{
