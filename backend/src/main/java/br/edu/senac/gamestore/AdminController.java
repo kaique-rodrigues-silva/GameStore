@@ -92,9 +92,9 @@ class AdminController {
     private Map<String,Object> usuario(Conta c){
         Map<String,Object> m=new LinkedHashMap<>();m.put("id",c.id);m.put("nome",c.nome);m.put("email",c.email);
         m.put("perfil",c.perfil);m.put("ativo",c.ativo);m.put("cpf",c.cpf);
-        m.put("rg",c.rg);m.put("rgUf",c.rgUf);return m;
+        return m;
     }
-    record DadosUsuario(String nome,String email,String senha,String perfil,String cpf,String rg,String rgUf) { }
+    record DadosUsuario(String nome,String email,String senha,String perfil,String cpf) { }
     @PostMapping("/usuarios")
     public Map<String,Object> criarUsuario(@RequestHeader(value="Authorization",required=false) String token,@RequestBody DadosUsuario d){
         admin(token);
@@ -108,10 +108,6 @@ class AdminController {
         if(!Documentos.cpf(d.cpf()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"CPF inválido");
         c.cpf=Documentos.numeros(d.cpf());
         if(contas.existsByCpf(c.cpf))throw new ResponseStatusException(HttpStatus.CONFLICT,"CPF já cadastrado");
-        if(d.rg()!=null&&!d.rg().isBlank()){
-            if(!Documentos.rg(d.rg(),d.rgUf()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"RG inválido para UF");
-            c.rg=Documentos.alfanumerico(d.rg());c.rgUf=d.rgUf().toUpperCase(Locale.ROOT);
-        }
         return usuario(contas.save(c));
     }
     record AlterarUsuario(String nome,Boolean ativo) { }
