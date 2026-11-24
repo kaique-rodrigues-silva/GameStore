@@ -81,26 +81,18 @@ import { ApiService, Produto, Pedido } from './api.service';
   <div *ngIf="aba==='usuarios'" class="admin-grid">
     <div class="panel"><h3>Cadastrar usuário pelo administrador</h3>
       <form (ngSubmit)="salvarUsuario()">
-        <label>Nome / Razão social <input name="uNome" required [(ngModel)]="usuarioForm.nome"/></label>
+        <label>Nome completo <input name="uNome" required [(ngModel)]="usuarioForm.nome"/></label>
         <label>E-mail <input name="uEmail" required type="email" [(ngModel)]="usuarioForm.email"/></label>
         <label>Senha (mínimo 8 caracteres) <input name="uSenha" required type="password" [(ngModel)]="usuarioForm.senha"/></label>
         <label>Perfil <select name="uPerfil" [(ngModel)]="usuarioForm.perfil"><option value="CLIENTE">Cliente</option><option value="ADMIN">Administrador</option></select></label>
-        <label>Tipo <select name="uTipo" [(ngModel)]="usuarioForm.tipo"><option value="PF">Pessoa física</option><option value="PJ">Pessoa jurídica</option></select></label>
-        <ng-container *ngIf="usuarioForm.tipo==='PF'">
-          <label>CPF <input name="uCpf" required [(ngModel)]="usuarioForm.cpf"/></label>
-          <label>RG (opcional) <input name="uRg" [(ngModel)]="usuarioForm.rg"/></label>
-          <label>UF do RG <select name="uRgUf" [(ngModel)]="usuarioForm.rgUf"><option *ngFor="let uf of ufs" [value]="uf">{{uf}}</option></select></label>
-        </ng-container>
-        <ng-container *ngIf="usuarioForm.tipo==='PJ'">
-          <label>CNPJ <input name="uCnpj" required [(ngModel)]="usuarioForm.cnpj"/></label>
-          <label>IE (opcional) <input name="uIe" [(ngModel)]="usuarioForm.ie"/></label>
-          <label>UF da IE <select name="uIeUf" [(ngModel)]="usuarioForm.ieUf"><option *ngFor="let uf of ufs" [value]="uf">{{uf}}</option></select></label>
-        </ng-container>
+        <label>CPF <input name="uCpf" required [(ngModel)]="usuarioForm.cpf"/></label>
+        <label>RG (opcional) <input name="uRg" [(ngModel)]="usuarioForm.rg"/></label>
+        <label>UF do RG <select name="uRgUf" [(ngModel)]="usuarioForm.rgUf"><option *ngFor="let uf of ufs" [value]="uf">{{uf}}</option></select></label>
         <button class="button full" type="submit">Cadastrar usuário</button>
       </form>
     </div>
     <div class="panel"><h3>Usuários existentes</h3>
-      <div class="admin-row" *ngFor="let u of usuarios"><div><strong>{{u.nome}}</strong><div class="meta">{{u.email}} · {{u.perfil}} · {{u.tipo}} · {{u.ativo?'Ativo':'Desativado'}}</div></div>
+      <div class="admin-row" *ngFor="let u of usuarios"><div><strong>{{u.nome}}</strong><div class="meta">{{u.email}} · {{u.perfil}} · {{u.ativo?'Ativo':'Desativado'}}</div></div>
         <button class="link" (click)="alternarConta(u)">{{u.ativo?'Desativar':'Ativar'}}</button>
       </div>
       <p class="muted">A desativação preserva o histórico dos pedidos.</p>
@@ -126,7 +118,7 @@ export class AdminComponent implements OnInit {
   processandoProduto:number|null=null;
   resumo:{produtos?:number;clientes?:number;pedidos?:number;faturamento?:number}={};
   produtos:Produto[]=[];pedidos:(Pedido&{clienteId:number})[]=[];
-  usuarios:{id:number;nome:string;email:string;perfil:string;tipo:string;ativo:boolean}[]=[];
+  usuarios:{id:number;nome:string;email:string;perfil:string;ativo:boolean}[]=[];
   plataformasJogo=['PS5','PS4','PS3','Xbox Series X|S','Xbox One','Xbox 360','Nintendo Switch','Nintendo Switch 2','PC','Nintendo 3DS','Nintendo Wii','Multiplataforma'];
   marcasConsole=['Sony / PlayStation','Microsoft / Xbox','Nintendo','Sega','Atari','Valve / Steam Deck','Outra'];
   get produtosEstoqueBaixo():Produto[]{
@@ -143,7 +135,7 @@ export class AdminComponent implements OnInit {
     this.produtoForm.plataforma='';
     this.produtoForm.categoria=categoria;
   }
-  novoUsuario(){return {nome:'',email:'',senha:'',perfil:'CLIENTE',tipo:'PF',cpf:'',cnpj:'',rg:'',rgUf:'SP',ie:'',ieUf:'SP'};}
+  novoUsuario(){return {nome:'',email:'',senha:'',perfil:'CLIENTE',cpf:'',rg:'',rgUf:'SP'};}
   ngOnInit(){void this.carregar();}
   async carregar(){
     this.erro='';try{
