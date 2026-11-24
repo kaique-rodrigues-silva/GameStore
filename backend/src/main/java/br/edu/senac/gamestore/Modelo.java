@@ -16,8 +16,6 @@ class Conta {
     @Column(nullable=false) public String tipo = "PF";
     @Column(unique=true) public String cpf;
     public String rg; public String rgUf;
-    @Column(unique=true) public String cnpj;
-    public String ie; public String ieUf;
     public String telefone; public String cep; public String logradouro; public String numero;
     public String complemento; public String bairro; public String cidade; public String uf;
     @Column(nullable=false) public boolean ativo = true;
